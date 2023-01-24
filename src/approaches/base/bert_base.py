@@ -53,8 +53,8 @@ class Appr(object):
         self.args=args
         self.ce=torch.nn.CrossEntropyLoss()
 
-        if 'one' in args.approach:
-            self.initial_model=deepcopy(model)
+        # if 'one' in args.approach:
+        #     self.initial_model=deepcopy(model)
 
         print('BERT NCL')
 
