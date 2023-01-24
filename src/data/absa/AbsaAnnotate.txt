@@ -1,0 +1,21 @@
+how to annotate?
+
+1. there are already positive and negative label, technically, we do not want to change it.
+
+2. for those no annotation, there are two possibilities:
+
+	a. No aspect at all (including co-reference --only focus on the sentence you are reading), we can simply ignore them (keep them unchanged)
+	
+	b. there do have aspect (must be in the sentence as it is. Do not stem or lemmanize), please annotate the aspect in the following format:
+	
+		xxxx[=]##....
+		
+3. we are helping fill a little gap on the neutral so that the format can be in 3-way classification --the same as SemEval2016
+
+
+
+Q&A:
+
+1. what is an aspect:
+
+In product reviews, an aspect is basically an attribute or feature of a product (domain). It is not necessary a noun (to be consistent with the requirement that aspect should be a word in the sentence)
