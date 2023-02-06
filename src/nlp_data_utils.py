@@ -277,8 +277,8 @@ class NusaXProcessor(DataProcessor):
         examples = []
         for (i, ids) in enumerate(lines):
             guid = "%s-%s" % (set_type, ids )
-            text_a = lines[ids]['text']
-            label = lines[ids]['label']
+            text_a = lines['text']
+            label = lines['label']
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
