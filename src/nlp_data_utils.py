@@ -276,6 +276,7 @@ class NusaXProcessor(DataProcessor):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, ids) in enumerate(lines):
+            print(lines)
             guid = "%s-%s" % (set_type, ids )
             text_a = lines['text']
             label = lines['label']
