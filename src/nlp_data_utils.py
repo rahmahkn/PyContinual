@@ -250,7 +250,7 @@ class AscProcessor(DataProcessor):
         return examples
 
 
-class NusaXProcessor(DataProcessor):
+class NusaCrowdProcessor(DataProcessor):
     """Processor for the NusaX Sentiment Classification."""
 
     def get_train_examples(self, data_dir, fn="train.json"):

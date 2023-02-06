@@ -12,55 +12,68 @@ import nlp_data_utils as data_utils
 from nlp_data_utils import ABSATokenizer
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 import math
+
 datasets = [
-            './dat/nusacrowd/nusax_senti/nusax_senti_ace',
-            './dat/nusacrowd/nusax_senti/nusax_senti_ban',
-            './dat/nusacrowd/nusax_senti/nusax_senti_bbc',
-            './dat/nusacrowd/nusax_senti/nusax_senti_bjn',
-            './dat/nusacrowd/nusax_senti/nusax_senti_bug',
-            
-            './dat/nusacrowd/nusax_senti/nusax_senti_ind',
-            './dat/nusacrowd/nusax_senti/nusax_senti_jav',
-            './dat/nusacrowd/nusax_senti/nusax_senti_mad',
-            './dat/nusacrowd/nusax_senti/nusax_senti_min',
-            './dat/nusacrowd/nusax_senti/nusax_senti_nij',
-            './dat/nusacrowd/nusax_senti/nusax_senti_sun'
+            './dat/nusacrowd/code_mixed_jv_id',
+            './dat/nusacrowd/emot',
+            './dat/nusacrowd/emotcmt',
+            './dat/nusacrowd/imdb_jv',
+            './dat/nusacrowd/karonese_sentiment',
+            './dat/nusacrowd/smsa',
+
+            './dat/nusacrowd/nusax_senti_ace',
+            './dat/nusacrowd/nusax_senti_ban',
+            './dat/nusacrowd/nusax_senti_bbc',
+            './dat/nusacrowd/nusax_senti_bjn',
+            './dat/nusacrowd/nusax_senti_bug',
+            './dat/nusacrowd/nusax_senti_ind',
+            './dat/nusacrowd/nusax_senti_jav',
+            './dat/nusacrowd/nusax_senti_mad',
+            './dat/nusacrowd/nusax_senti_min',
+            './dat/nusacrowd/nusax_senti_nij',
+            './dat/nusacrowd/nusax_senti_sun'
             ]
 
 
-domains = [
-     'NusaX_Acehnese',
-     'NusaX_Balinese',
-     'NusaX_TobaBatak',
-     'NusaX_Banjarese',
-     'NusaX_Buginese',
-     
-     'NusaX_Indonesian',
-     'NusaX_Javanese',
-     'NusaX_Madurese',
-     'NusaX_Minangkabau',
-     'NusaX_Ngaju',
-     'NusaX_Sundanese',
-     ]
+tasks = [
+    'CodeMixedJVID_Javanese',
+    'Emot_Indonesian',
+    'EmotCMT_Indonesian',
+    'IMDb_Javanese',
+    'Sentiment_Karonese',
+    'SmSA_Indonesian',
+    
+    'NusaX_Acehnese',
+    'NusaX_Balinese',
+    'NusaX_TobaBatak',
+    'NusaX_Banjarese',
+    'NusaX_Buginese', 
+    'NusaX_Indonesian',
+    'NusaX_Javanese',
+    'NusaX_Madurese',
+    'NusaX_Minangkabau',
+    'NusaX_Ngaju',
+    'NusaX_Sundanese'
+    ]
 
 def get(logger=None,args=None):
     data={}
     taskcla=[]
 
-    # Others
+    # You can change the task heere
     f_name = 'nusax_random'
 
     with open(f_name,'r') as f_random_seq:
         random_sep = f_random_seq.readlines()[args.idrandom].split()
 
     print('random_sep: ',random_sep)
-    print('domains: ',domains)
+    print('domains: ', tasks)
 
     print('random_sep: ',len(random_sep))
-    print('domains: ',len(domains))
+    print('domains: ',len(tasks))
 
     for t in range(args.ntasks):
-        dataset = datasets[domains.index(random_sep[t])]
+        dataset = datasets[tasks.index(random_sep[t])]
         print('dataset: ',dataset)
         data[t]={}
         # if 'Bing' in dataset:
@@ -72,7 +85,7 @@ def get(logger=None,args=None):
         data[t]['name']=dataset
         data[t]['ncla']=3
 
-        processor = data_utils.NusaXProcessor()
+        processor = data_utils.NusaCrowdProcessor()
         label_list = processor.get_labels()
         tokenizer = ABSATokenizer.from_pretrained(args.bert_model)
         train_examples = processor.get_train_examples(dataset)
@@ -116,7 +129,7 @@ def get(logger=None,args=None):
         data[t]['valid']=valid_data
 
 
-        processor = data_utils.NusaXProcessor()
+        processor = data_utils.NusaCrowdProcessor()
         label_list = processor.get_labels()
         tokenizer = BertTokenizer.from_pretrained(args.bert_model)
         eval_examples = processor.get_test_examples(dataset)
