@@ -276,12 +276,11 @@ class NusaXProcessor(DataProcessor):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, ids) in enumerate(lines):
-            print(lines)
-            guid = "%s-%s" % (set_type, ids )
-            text_a = lines['text']
-            label = lines['label']
+            guid = "%s-%s" % (set_type, ids)
+            text_a = lines[i]['text']
+            label = lines[i]['label']
             examples.append(
-                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+                InputExample(guid=guid, text_a=text_a, label=label))
         return examples
 
 
@@ -312,7 +311,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
     # text_b = lines[ids]['sentence']
     # label = lines[ids]['polarity']
 
-    if transformer_args.task == 'asc': # for pair
+    if transformer_args.task == 'asc' or transformer_args.task == 'nusax_senti': # for pair
         label_map={'+': 0,'positive': 0, '-': 1, 'negative': 1, 'neutral': 2}
     elif transformer_args.task == 'nli':
         label_map={'neutral': 0, 'entailment': 1, 'contradiction': 2}
@@ -671,5 +670,3 @@ def whitespace_tokenize(text):
 def get_random_word(vocab_words):
     i = randint(0, len(vocab_words)-1)
     return vocab_words[i]
-
-

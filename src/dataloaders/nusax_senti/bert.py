@@ -116,7 +116,7 @@ def get(logger=None,args=None):
         data[t]['valid']=valid_data
 
 
-        processor = data_utils.AscProcessor()
+        processor = data_utils.NusaXProcessor()
         label_list = processor.get_labels()
         tokenizer = BertTokenizer.from_pretrained(args.bert_model)
         eval_examples = processor.get_test_examples(dataset)
@@ -148,5 +148,3 @@ def get(logger=None,args=None):
 
 
     return data,taskcla
-
-
