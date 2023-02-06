@@ -250,7 +250,38 @@ class AscProcessor(DataProcessor):
         return examples
 
 
+class NusaXProcessor(DataProcessor):
+    """Processor for the NusaX Sentiment Classification."""
 
+    def get_train_examples(self, data_dir, fn="train.json"):
+        """See base class."""
+        return self._create_examples(
+            self._read_json(os.path.join(data_dir, fn)), "train")
+
+    def get_dev_examples(self, data_dir, fn="valid.json"):
+        """See base class."""
+        return self._create_examples(
+            self._read_json(os.path.join(data_dir, fn)), "valid")
+
+    def get_test_examples(self, data_dir, fn="test.json"):
+        """See base class."""
+        return self._create_examples(
+            self._read_json(os.path.join(data_dir, fn)), "test")
+
+    def get_labels(self):
+        """See base class."""
+        return ["positive", "negative", "neutral"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, ids) in enumerate(lines):
+            guid = "%s-%s" % (set_type, ids )
+            text_a = lines[ids]['text']
+            label = lines[ids]['label']
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
 
 
 class StringProcessor(DataProcessor):

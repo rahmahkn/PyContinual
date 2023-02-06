@@ -11,7 +11,7 @@ args = set_args()
 bert_backbone = ['bert','bert_adapter','bert_frozen']
 w2v_backbone = ['w2v','w2v_as']
 
-language_dataset = ['asc','dsc','ssc','nli','newsgroup']
+language_dataset = ['asc','dsc','ssc','nli','newsgroup','nusax_senti']
 image_dataset = ['celeba','femnist','vlcs','cifar10','mnist','fashionmnist','cifar100']
 
 
@@ -22,6 +22,10 @@ if args.task == 'asc': #aspect sentiment classication
         from dataloaders.asc import w2v_as as dataloader
     elif args.backbone in bert_backbone: #all others
         from dataloaders.asc import bert as dataloader
+        
+elif args.task == 'nusax_senti': #document sentiment classication
+    if args.backbone in bert_backbone:  # all others
+        from dataloaders.nusax_senti import bert as dataloader
 
 elif args.task == 'dsc': #document sentiment classication
     if args.backbone=='w2v':

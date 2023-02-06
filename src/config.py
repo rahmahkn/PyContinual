@@ -22,7 +22,7 @@ def asc_config(parser):
                         choices=['ncl','one','mtl','l2','a-gem','derpp','kan','srk','ewc','hal','ucl','owm','acl','hat','cat','b-cl','classic','ctr'])
 
     parser.add_argument('--task',default='',type=str,required=True,help='what datasets',
-                        choices=['asc','dsc','ssc','nli','newsgroup','celeba','femnist','vlcs','cifar10','mnist','fashionmnist','cifar100'])
+                        choices=['asc','dsc','ssc','nli','newsgroup','celeba','femnist','vlcs','cifar10','mnist','fashionmnist','cifar100','nusax_senti'])
 
     parser.add_argument('--scenario',default='',type=str,required=True,help='what senario it will be',
                         choices=['til_classification', 'dil_classification'])
