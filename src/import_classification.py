@@ -25,7 +25,7 @@ if args.task == 'asc': #aspect sentiment classication
         
 elif args.task == 'nusax_senti': #document sentiment classication
     if args.backbone in bert_backbone:  # all others
-        from dataloaders.nusax_senti import bert as dataloader
+        from dataloaders.nusacrowd import bert as dataloader
 
 elif args.task == 'dsc': #document sentiment classication
     if args.backbone=='w2v':
