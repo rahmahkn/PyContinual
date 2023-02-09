@@ -250,23 +250,23 @@ class AscProcessor(DataProcessor):
         return examples
 
 
-class NusaCrowdProcessor(DataProcessor, task):
+class NusaCrowdProcessor(DataProcessor):
     """Processor for the NusaX Sentiment Classification."""
 
     def get_train_examples(self, data_dir, fn="train.json"):
         """See base class."""
         return self._create_examples(
-            self._read_json(os.path.join(data_dir, fn)), "train")
+            self._read_json(os.path.join(data_dir, fn)), "train", data_dir)
 
     def get_dev_examples(self, data_dir, fn="valid.json"):
         """See base class."""
         return self._create_examples(
-            self._read_json(os.path.join(data_dir, fn)), "valid")
+            self._read_json(os.path.join(data_dir, fn)), "valid", data_dir)
 
     def get_test_examples(self, data_dir, fn="test.json"):
         """See base class."""
         return self._create_examples(
-            self._read_json(os.path.join(data_dir, fn)), "test")
+            self._read_json(os.path.join(data_dir, fn)), "test", data_dir)
 
     def get_labels(self):
         """See base class."""
@@ -275,46 +275,46 @@ class NusaCrowdProcessor(DataProcessor, task):
     def _label_converter(self, old_value, label_map):
         return label_map[old_value]
 
-    def _create_examples(self, lines, set_type):
+    def _create_examples(self, lines, set_type, data_dir):
         """Creates examples for the training and dev sets."""
         examples = []
         for (i, ids) in enumerate(lines):
             guid = "%s-%s" % (set_type, ids)
             text_a = lines[i]['text']
             
-            if task == 'CodeMixedJVID_Javanese':
+            if data_dir == './dat/nusacrowd/code_mixed_jv_id':
                 label = self._label_converter(lines[i]['label'], {1: 0, 0: 1, -1: 2})
-            elif task == 'Emot_Indonesian':
+            elif data_dir == './dat/nusacrowd/emot':
                 label = self._label_converter(lines[i]['label'], {0: 3, 1: 4, 2: 5, 3: 6, 4: 7})
-            elif task == 'EmotCMT_Indonesian':
+            elif data_dir == './dat/nusacrowd/emotcmt':
                 label = self._label_converter(lines[i]['label'], {0: 5, 1: 6, 2: 3, 3: 7, 4: 4})
-            elif task == 'IMDb_Javanese':
+            elif data_dir == './dat/nusacrowd/imdb_jv':
                 label = self._label_converter(lines[i]['label'], {1: 0, 0: 1})
-            elif task == 'Sentiment_Karonese':
+            elif data_dir == './dat/nusacrowd/karonese_sentiment':
                 label = self._label_converter(lines[i]['label'], {0: 1, 1: 2, 2: 0})
-            elif task == 'SmSA_Indonesian':
+            elif data_dir == './dat/nusacrowd/smsa':
                 label = self._label_converter(lines[i]['label'], {0: 0, 1: 2, 2: 1})
-            elif task == 'NusaX_Acehnese':
+            elif data_dir == './dat/nusacrowd/nusax_senti_ace':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_Balinese':
+            elif data_dir == './dat/nusacrowd/nusax_senti_ban':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_TobaBatak':
+            elif data_dir == './dat/nusacrowd/nusax_senti_bbc':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_Banjarese':
+            elif data_dir == './dat/nusacrowd/nusax_senti_bjn':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_Buginese':
+            elif data_dir == './dat/nusacrowd/nusax_senti_bug':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_Indonesian':
+            elif data_dir == './dat/nusacrowd/nusax_senti_ind':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_Javanese':
+            elif data_dir == './dat/nusacrowd/nusax_senti_jav':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_Madurese':
+            elif data_dir == './dat/nusacrowd/nusax_senti_mad':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_Minangkabau':
+            elif data_dir == './dat/nusacrowd/nusax_senti_min':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_Ngaju':
+            elif data_dir == './dat/nusacrowd/nusax_senti_nij':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif task == 'NusaX_Sundanese':
+            elif data_dir == './dat/nusacrowd/nusax_senti_sun':
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
             
             examples.append(
