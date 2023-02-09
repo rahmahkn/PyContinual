@@ -67,10 +67,10 @@ def get(logger=None,args=None):
         random_sep = f_random_seq.readlines()[args.idrandom].split()
 
     print('random_sep: ',random_sep)
-    print('domains: ', tasks)
+    print('tasks: ', tasks)
 
     print('random_sep: ',len(random_sep))
-    print('domains: ',len(tasks))
+    print('tasks: ',len(tasks))
 
     for t in range(args.ntasks):
         dataset = datasets[tasks.index(random_sep[t])]
@@ -85,7 +85,7 @@ def get(logger=None,args=None):
         data[t]['name']=dataset
         data[t]['ncla']=3
 
-        processor = data_utils.NusaCrowdProcessor()
+        processor = data_utils.NusaCrowdProcessor(tasks.index(random_sep[t]))
         label_list = processor.get_labels()
         tokenizer = ABSATokenizer.from_pretrained(args.bert_model)
         train_examples = processor.get_train_examples(dataset)

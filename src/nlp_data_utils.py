@@ -250,7 +250,7 @@ class AscProcessor(DataProcessor):
         return examples
 
 
-class NusaCrowdProcessor(DataProcessor):
+class NusaCrowdProcessor(DataProcessor, task):
     """Processor for the NusaX Sentiment Classification."""
 
     def get_train_examples(self, data_dir, fn="train.json"):
@@ -270,7 +270,10 @@ class NusaCrowdProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        return ["positive", "negative", "neutral"]
+        return ["positive", "negative", "neutral", "sadness", "anger", "love", "fear", "happy"]
+    
+    def _label_converter(self, old_value, label_map):
+        return label_map[old_value]
 
     def _create_examples(self, lines, set_type):
         """Creates examples for the training and dev sets."""
@@ -278,7 +281,42 @@ class NusaCrowdProcessor(DataProcessor):
         for (i, ids) in enumerate(lines):
             guid = "%s-%s" % (set_type, ids)
             text_a = lines[i]['text']
-            label = lines[i]['label']
+            
+            if task == 'CodeMixedJVID_Javanese':
+                label = self._label_converter(lines[i]['label'], {1: 0, 0: 1, -1: 2})
+            elif task == 'Emot_Indonesian':
+                label = self._label_converter(lines[i]['label'], {0: 3, 1: 4, 2: 5, 3: 6, 4: 7})
+            elif task == 'EmotCMT_Indonesian':
+                label = self._label_converter(lines[i]['label'], {0: 5, 1: 6, 2: 3, 3: 7, 4: 4})
+            elif task == 'IMDb_Javanese':
+                label = self._label_converter(lines[i]['label'], {1: 0, 0: 1})
+            elif task == 'Sentiment_Karonese':
+                label = self._label_converter(lines[i]['label'], {0: 1, 1: 2, 2: 0})
+            elif task == 'SmSA_Indonesian':
+                label = self._label_converter(lines[i]['label'], {0: 0, 1: 2, 2: 1})
+            elif task == 'NusaX_Acehnese':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_Balinese':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_TobaBatak':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_Banjarese':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_Buginese':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_Indonesian':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_Javanese':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_Madurese':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_Minangkabau':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_Ngaju':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            elif task == 'NusaX_Sundanese':
+                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            
             examples.append(
                 InputExample(guid=guid, text_a=text_a, label=label))
         return examples
@@ -311,8 +349,19 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
     # text_b = lines[ids]['sentence']
     # label = lines[ids]['polarity']
 
-    if transformer_args.task == 'asc' or transformer_args.task == 'nusax_senti': # for pair
+    if transformer_args.task == 'asc': # for pair
         label_map={'+': 0,'positive': 0, '-': 1, 'negative': 1, 'neutral': 2}
+    # elif transformer_args.task == 'nusax_senti':
+    #     label_map={
+    #         'positive': 0, 
+    #         'negative': 1,
+    #         'neutral': 2,
+    #         'sedih': 3,
+    #         'marah': 4,
+    #         'cinta': 5,
+    #         'takut': 6,
+    #         'senang': 7
+    #     }
     elif transformer_args.task == 'nli':
         label_map={'neutral': 0, 'entailment': 1, 'contradiction': 2}
     elif transformer_args.task == 'ae':
