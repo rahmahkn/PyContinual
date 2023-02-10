@@ -85,7 +85,7 @@ def get(logger=None,args=None):
         data[t]['name']=dataset
         data[t]['ncla']=3
 
-        processor = data_utils.NusaCrowdProcessor(tasks.index(random_sep[t]))
+        processor = data_utils.NusaCrowdProcessor()
         label_list = processor.get_labels()
         tokenizer = ABSATokenizer.from_pretrained(args.bert_model)
         train_examples = processor.get_train_examples(dataset)

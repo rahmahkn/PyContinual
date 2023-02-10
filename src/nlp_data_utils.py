@@ -351,17 +351,25 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
 
     if transformer_args.task == 'asc': # for pair
         label_map={'+': 0,'positive': 0, '-': 1, 'negative': 1, 'neutral': 2}
-    # elif transformer_args.task == 'nusax_senti':
-    #     label_map={
-    #         'positive': 0, 
-    #         'negative': 1,
-    #         'neutral': 2,
-    #         'sedih': 3,
-    #         'marah': 4,
-    #         'cinta': 5,
-    #         'takut': 6,
-    #         'senang': 7
-    #     }
+    elif transformer_args.task == 'nusax_senti':
+        label_map={
+            # 'positive': 0, 
+            # 'negative': 1,
+            # 'neutral': 2,
+            # 'sedih': 3,
+            # 'marah': 4,
+            # 'cinta': 5,
+            # 'takut': 6,
+            # 'senang': 7
+            0: 0, 
+            1: 1,
+            2: 2,
+            3: 3,
+            4: 4,
+            5: 5,
+            6: 6,
+            7: 7
+        }
     elif transformer_args.task == 'nli':
         label_map={'neutral': 0, 'entailment': 1, 'contradiction': 2}
     elif transformer_args.task == 'ae':
