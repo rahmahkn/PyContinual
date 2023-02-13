@@ -97,6 +97,8 @@ class Appr(object):
             self.grad_xy = torch.Tensor(np.sum(self.grad_dims)).to(self.device)
             self.grad_er = torch.Tensor(np.sum(self.grad_dims)).to(self.device)
 
+            self.grads_cs = []
+
         if  args.baseline=='l2':
             self.lamb=self.args.lamb                      # Grid search = [500,1000,2000,5000,10000,20000,50000]; best was 5000
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

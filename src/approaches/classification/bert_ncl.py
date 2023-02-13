@@ -98,7 +98,7 @@ class Appr(ApprBase):
                 outputs=output_dict['y']
                 output = outputs[t]
 
-
+            print(output, targets)
             loss=self.ce(output,targets)
 
             if self.args.sup_loss:
