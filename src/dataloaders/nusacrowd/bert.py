@@ -75,15 +75,9 @@ def get(logger=None,args=None):
     for t in range(args.ntasks):
         dataset = datasets[tasks.index(random_sep[t])]
         print('dataset: ',dataset)
-        data[t]={}
-        # if 'Bing' in dataset:
-        #     data[t]['name']=dataset
-        #     if args.baseline=='derpp' or args.baseline=='a-gem': data[t]['ncla']=3
-        #     else: data[t]['ncla']=2
-        # elif 'XuSemEval' in dataset:
-        
+        data[t]={}        
         data[t]['name']=dataset
-        data[t]['ncla']=3
+        data[t]['ncla']=8
 
         processor = data_utils.NusaCrowdProcessor()
         label_list = processor.get_labels()
