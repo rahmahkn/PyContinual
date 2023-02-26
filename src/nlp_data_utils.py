@@ -270,7 +270,8 @@ class NusaCrowdProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        return ["positive", "negative", "neutral", "sadness", "anger", "love", "fear", "happy"]
+        # return ["positive", "negative", "neutral", "sadness", "anger", "love", "fear", "happy"]
+        return [0, 1, 2, 3, 4, 5, 6, 7]
     
     def _label_converter(self, old_value, label_map):
         return label_map[old_value]
@@ -281,6 +282,7 @@ class NusaCrowdProcessor(DataProcessor):
         for (i, ids) in enumerate(lines):
             guid = "%s-%s" % (set_type, ids)
             text_a = lines[i]['text']
+            text_b = None
             
             if data_dir == './dat/nusacrowd/code_mixed_jv_id':
                 label = self._label_converter(lines[i]['label'], {1: 0, 0: 1, -1: 2})
@@ -318,7 +320,7 @@ class NusaCrowdProcessor(DataProcessor):
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
             
             examples.append(
-                InputExample(guid=guid, text_a=text_a, label=label))
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
 

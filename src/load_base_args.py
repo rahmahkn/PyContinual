@@ -20,7 +20,12 @@ def load():
         args.num_train_epochs = 20
         args.nepochs = 100
         args.nclasses = 2
-
+        
+    if args.task == 'nusax_senti': #nusacrowd
+        args.ntasks = 17
+        args.num_train_epochs = 20
+        args.nepochs = 100
+        args.nclasses = 8
 
     if args.task == 'newsgroup': #aspect sentiment classication
         args.ntasks = 10
@@ -28,8 +33,6 @@ def load():
         args.num_train_epochs = 10
         args.nepochs = 100
         args.nclasses = 2
-
-
 
     if args.task == 'celeba':
         if args.ntasks != 20: args.ntasks = 10
