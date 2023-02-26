@@ -67,6 +67,8 @@ class InputExample(object):
         self.text_a = text_a
         self.text_b = text_b
         self.label = label
+        
+#         print(text_a, label)
 
 
 class InputFeatures(object):
@@ -285,7 +287,7 @@ class NusaCrowdProcessor(DataProcessor):
             text_b = None
             
             if data_dir == './dat/nusacrowd/code_mixed_jv_id':
-                label = self._label_converter(lines[i]['label'], {1: 0, 0: 1, -1: 2})
+                label = self._label_converter(lines[i]['label'], {0: 1, 1: 2, 2: 0})
             elif data_dir == './dat/nusacrowd/emot':
                 label = self._label_converter(lines[i]['label'], {0: 3, 1: 4, 2: 5, 3: 6, 4: 7})
             elif data_dir == './dat/nusacrowd/emotcmt':
