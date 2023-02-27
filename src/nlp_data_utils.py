@@ -272,8 +272,8 @@ class NusaCrowdProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        # return ["positive", "negative", "neutral", "sadness", "anger", "love", "fear", "happy"]
-        return [0, 1, 2, 3, 4, 5, 6, 7]
+        return ["positive", "negative", "neutral", "sadness", "anger", "love", "fear", "happy"]
+        # return [0, 1, 2, 3, 4, 5, 6, 7]
     
     def _label_converter(self, old_value, label_map):
         return label_map[old_value]
@@ -298,28 +298,30 @@ class NusaCrowdProcessor(DataProcessor):
                 label = self._label_converter(lines[i]['label'], {0: 1, 1: 2, 2: 0})
             elif data_dir == './dat/nusacrowd/smsa':
                 label = self._label_converter(lines[i]['label'], {0: 0, 1: 2, 2: 1})
-            elif data_dir == './dat/nusacrowd/nusax_senti_ace':
+            elif data_dir.startswith('./dat/nusacrowd/nusax_senti_'):
                 label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_ban':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_bbc':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_bjn':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_bug':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_ind':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_jav':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_mad':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_min':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_nij':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
-            elif data_dir == './dat/nusacrowd/nusax_senti_sun':
-                label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_ace':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_ban':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_bbc':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_bjn':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_bug':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_ind':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_jav':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_mad':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_min':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_nij':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
+            # elif data_dir == './dat/nusacrowd/nusax_senti_sun':
+            #     label = self._label_converter(lines[i]['label'], {"positive": 0, "negative": 1, "neutral": 2})
             
             examples.append(
                 InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
@@ -355,24 +357,24 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
 
     if transformer_args.task == 'asc': # for pair
         label_map={'+': 0,'positive': 0, '-': 1, 'negative': 1, 'neutral': 2}
-    elif transformer_args.task == 'nusax_senti':
+    elif transformer_args.task == 'nusacrowd':
         label_map={
-            # 'positive': 0, 
-            # 'negative': 1,
-            # 'neutral': 2,
-            # 'sedih': 3,
-            # 'marah': 4,
-            # 'cinta': 5,
-            # 'takut': 6,
-            # 'senang': 7
-            0: 0, 
-            1: 1,
-            2: 2,
-            3: 3,
-            4: 4,
-            5: 5,
-            6: 6,
-            7: 7
+            'positive': 0, 
+            'negative': 1,
+            'neutral': 2,
+            'sedih': 3,
+            'marah': 4,
+            'cinta': 5,
+            'takut': 6,
+            'senang': 7
+            # 0: 0, 
+            # 1: 1,
+            # 2: 2,
+            # 3: 3,
+            # 4: 4,
+            # 5: 5,
+            # 6: 6,
+            # 7: 7
         }
     elif transformer_args.task == 'nli':
         label_map={'neutral': 0, 'entailment': 1, 'contradiction': 2}

@@ -21,7 +21,7 @@ def load():
         args.nepochs = 100
         args.nclasses = 2
         
-    if args.task == 'nusax_senti': #nusacrowd
+    if args.task == 'nusacrowd': #nusacrowd
         args.ntasks = 17
         args.num_train_epochs = 20
         args.nepochs = 100
