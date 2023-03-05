@@ -196,6 +196,7 @@ for t,ncla in taskcla:
             if 'asc' in args.task: pre_define_num_epochs = 30 #non-semeval estimation
             elif 'dsc' in args.task: pre_define_num_epochs = 20
             elif 'newsgroup' in args.task: pre_define_num_epochs = 10
+            elif 'nusacrowd' in args.task: pre_define_num_epochs = 10
             logger.info('[Elapsed time per tasks = {:.1f} s]'.format((time.time()-tstart)*pre_define_num_epochs))
             logger.info('[Elapsed time per tasks = {:.1f} min]'.format(((time.time()-tstart)/(60))*pre_define_num_epochs))
             logger.info('[Elapsed time per tasks = {:.1f} h]'.format(((time.time()-tstart)/(60*60))*pre_define_num_epochs))
@@ -246,9 +247,12 @@ for t,ncla in taskcla:
         test_set = args.ntasks
     else:
         test_set = t+1
+        
+    task_name = []
     for u in range(test_set):
 
         test=data[u]['test']
+        task_name += [data[u]['name']]
 
         if args.multi_gpu and args.distributed:
             test_sampler = DistributedSampler(test)
@@ -282,8 +286,9 @@ for t,ncla in taskcla:
 
             # Save
             print('Save at '+args.output)
-            np.savetxt(args.output + 'progressive.acc',acc,'%.4f',delimiter='\t')
-            np.savetxt(args.output + 'progressive.f1_macro',f1_macro,'%.4f',delimiter='\t')
+            np.savetxt(args.output + 'progressive.acc.' + str(args.exp_id),acc,'%.4f',delimiter='\t')
+            np.savetxt(args.output + 'progressive.lss.' + str(args.exp_id),lss,'%.4f',delimiter='\t')
+            np.savetxt(args.output + 'progressive.f1_macro.' + str(args.exp_id),f1_macro,'%.4f',delimiter='\t')
 
             # Done
             print('*'*100)
@@ -316,6 +321,8 @@ for t,ncla in taskcla:
                     for j in range(acc.shape[1]):
                         file.writelines(str(acc[j][j]) + '\n')
                         f1_file.writelines(str(f1_macro[j][j]) + '\n')
+                        
+    np.savetxt(args.output + 'tasks.' + str(args.exp_id),task_name,delimiter='\t',fmt="%s")
 
 
 ########################################################################################################################

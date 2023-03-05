@@ -447,3 +447,22 @@ def is_number(s):
 
     return False
 ########################################################################################################################
+
+def visualize(directory, exp_id, output, metrics):
+  num_task = 17
+  list_head = []
+  for i in range(num_task):
+    list_head += ['Task ' + str(i+1)]
+
+  filename = f"{directory}/{output}progressive.{metrics}"
+  df = pd.read_csv(filename, sep="\s+", names=list_head)
+  # df = pd.read_csv('/content/drive/My Drive/Kuliah IF/! TA/Parse Output/bert_frozen_ewc_.txtprogressive.acc', sep="\s+", names=list_head)
+  df.plot()
+
+  plt.legend(bbox_to_anchor=(1.0, 1.05))
+  plt.xlabel("task")
+  plt.ylabel(metrics)
+
+  plt.savefig(f"/viz/{exp_id}_{metrics}.png", bbox_inches='tight')
+  plt.show()
+  plt.close()

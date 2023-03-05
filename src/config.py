@@ -196,6 +196,9 @@ def asc_config(parser):
                         help="Number of updates steps to accumulate before performing a backward/update pass.")
     parser.add_argument("--max_grad_norm", default=1.0, type=float,
                         help="Max gradient norm.")
+    
+    parser.add_argument('--exp_id', type=int,
+                        help="ID for experiment")
     return parser
 
 def train_config(parser):
