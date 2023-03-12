@@ -323,7 +323,8 @@ for t,ncla in taskcla:
                         f1_file.writelines(str(f1_macro[j][j]) + '\n')
                         
     np.savetxt(args.output + 'tasks.' + str(args.exp_id),task_name,delimiter='\t',fmt="%s")
-
+    
+    utils.visualize('', args.exp_id, args.output, args)
 
 ########################################################################################################################
 

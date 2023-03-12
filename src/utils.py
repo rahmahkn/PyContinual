@@ -4,6 +4,9 @@ from copy import deepcopy
 import torch
 from tqdm import tqdm
 import time
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 ########################################################################################################################
 
@@ -448,21 +451,51 @@ def is_number(s):
     return False
 ########################################################################################################################
 
-def visualize(directory, exp_id, output, metrics):
-  num_task = 17
-  list_head = []
-  for i in range(num_task):
-    list_head += ['Task ' + str(i+1)]
+def get_filename(dir_name, exp_id, output, metrics):
+  if metrics == "tasks":
+    return f"{output}{metrics}.{exp_id}"
+    
+  return f"{output}progressive.{metrics}.{exp_id}"
 
-  filename = f"{directory}/{output}progressive.{metrics}"
-  df = pd.read_csv(filename, sep="\s+", names=list_head)
-  # df = pd.read_csv('/content/drive/My Drive/Kuliah IF/! TA/Parse Output/bert_frozen_ewc_.txtprogressive.acc', sep="\s+", names=list_head)
-  df.plot()
+def visualize(dir_name, exp_id, output, args):
+  # define metrics
+  list_metrics = ['acc', 'f1_macro', 'lss']
 
-  plt.legend(bbox_to_anchor=(1.0, 1.05))
-  plt.xlabel("task")
-  plt.ylabel(metrics)
+  # define tasks
+  tasks_const = {
+    './dat/nusacrowd/code_mixed_jv_id': 'CodeMixedJVID_Javanese',
+    './dat/nusacrowd/emot': 'Emot_Indonesian',
+    './dat/nusacrowd/emotcmt': 'EmotCMT_Indonesian',
+    './dat/nusacrowd/imdb_jv': 'IMDb_Javanese',
+    './dat/nusacrowd/karonese_sentiment': 'Sentiment_Karonese',
+    './dat/nusacrowd/smsa': 'SmSA_Indonesian',
+    './dat/nusacrowd/nusax_senti_ace': 'NusaX_Acehnese',
+    './dat/nusacrowd/nusax_senti_ban': 'NusaX_Balinese',
+    './dat/nusacrowd/nusax_senti_bbc': 'NusaX_TobaBatak',
+    './dat/nusacrowd/nusax_senti_bjn': 'NusaX_Banjarese',
+    './dat/nusacrowd/nusax_senti_bug': 'NusaX_Buginese',
+    './dat/nusacrowd/nusax_senti_ind': 'NusaX_Indonesian',
+    './dat/nusacrowd/nusax_senti_jav': 'NusaX_Javanese',
+    './dat/nusacrowd/nusax_senti_mad': 'NusaX_Madurese',
+    './dat/nusacrowd/nusax_senti_min': 'NusaX_Minangkabau',
+    './dat/nusacrowd/nusax_senti_nij': 'NusaX_Ngaju',
+    './dat/nusacrowd/nusax_senti_sun': 'NusaX_Sundanese'    
+    }
+  
+  tasks_df = pd.read_csv(get_filename(dir_name, exp_id, output, "tasks"), sep="\s+", names=['Task'])
+  if args.task == "nusacrowd":
+      for i in range (len(tasks_df)):
+        tasks_df['Task'][i] = f"{i}. {tasks_const[tasks_df['Task'][i]]}"
 
-  plt.savefig(f"/viz/{exp_id}_{metrics}.png", bbox_inches='tight')
-  plt.show()
-  plt.close()
+  # create visualization
+  for metrics in list_metrics:
+      df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=tasks_df['Task'])
+      df.plot()
+
+      plt.legend(bbox_to_anchor=(1.0, 1.05))
+      plt.xlabel('task order')
+      plt.ylabel(metrics)
+
+      plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
+      plt.show()
+      plt.close()
