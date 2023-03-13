@@ -289,6 +289,10 @@ for t,ncla in taskcla:
             np.savetxt(args.output + 'progressive.acc.' + str(args.exp_id),acc,'%.4f',delimiter='\t')
             np.savetxt(args.output + 'progressive.lss.' + str(args.exp_id),lss,'%.4f',delimiter='\t')
             np.savetxt(args.output + 'progressive.f1_macro.' + str(args.exp_id),f1_macro,'%.4f',delimiter='\t')
+            
+            np.savetxt(args.output + 'progressive.avg_acc.' + str(args.exp_id),utils.get_average(acc),'%.4f',delimiter='\t')
+            np.savetxt(args.output + 'progressive.avg_lss.' + str(args.exp_id),utils.get_average(lss),'%.4f',delimiter='\t')
+            np.savetxt(args.output + 'progressive.avg_f1_macro.' + str(args.exp_id),utils.get_average(f1_macro),'%.4f',delimiter='\t')
 
             # Done
             print('*'*100)

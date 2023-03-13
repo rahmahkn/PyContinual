@@ -451,6 +451,21 @@ def is_number(s):
     return False
 ########################################################################################################################
 
+print(f'Original Array:\n{arr1}')
+
+arr1_transpose = arr1.transpose()
+
+print(f'Transposed Array:\n{arr1_transpose}')
+
+def get_average(matrix):
+    mat = np.array(matrix).transpose()
+    
+    result = []
+    for row in mat:
+        result += [sum(row)/len(row)]
+        
+    return result
+
 def get_filename(dir_name, exp_id, output, metrics):
   if metrics == "tasks":
     return f"{output}{metrics}.{exp_id}"
@@ -459,7 +474,7 @@ def get_filename(dir_name, exp_id, output, metrics):
 
 def visualize(dir_name, exp_id, output, args):
   # define metrics
-  list_metrics = ['acc', 'f1_macro', 'lss']
+  list_metrics = ['acc', 'f1_macro', 'lss', 'svg_acc', 'avg_f1_macro', 'avg_lss']
 
   # define tasks
   tasks_const = {
