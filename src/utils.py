@@ -451,6 +451,15 @@ def is_number(s):
     return False
 ########################################################################################################################
 
+def make_dir(exp_id, task):
+    # Parent Directory path
+    parent_dir = "/res"
+    
+    # Path
+    path = os.path.join(parent_dir, exp_id)
+    os.mkdir(path)
+    print("Directory '%s' created" %directory)
+
 def get_average(matrix):
     mat = np.array(matrix).transpose()
     
