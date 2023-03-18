@@ -157,20 +157,20 @@ for t,ncla in taskcla:
 
     if args.multi_gpu and args.distributed:
         valid_sampler = DistributedSampler(valid) #TODO: DitributedSequentailSampler
-        valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, shuffle=True)
+        valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size)
     else:
         valid_sampler = SequentialSampler(valid)
-        valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, pin_memory=True, shuffle=True)
+        valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
 
     if args.resume_model and t < args.resume_from_task: continue #resume. dont forget to copy the forward results
 
 
     if args.multi_gpu and args.distributed:
         train_sampler = DistributedSampler(train)
-        train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size, shuffle=True)
+        train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
     else:
         train_sampler = RandomSampler(train)
-        train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size,pin_memory=True, shuffle=True)
+        train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size,pin_memory=True)
 
     logger.info('Start Training and Set the clock')
     tstart=time.time()
@@ -256,10 +256,10 @@ for t,ncla in taskcla:
 
         if args.multi_gpu and args.distributed:
             test_sampler = DistributedSampler(test)
-            test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size, shuffle=True)
+            test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size)
         else:
             test_sampler = SequentialSampler(test)
-            test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size, shuffle=True)
+            test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size)
 
         if args.task in classification_tasks: #classification task
 
@@ -269,7 +269,7 @@ for t,ncla in taskcla:
             elif 'cat' in args.baseline:
                 valid=data[u]['valid']
                 valid_sampler = SequentialSampler(valid)
-                valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size,pin_memory=True, shuffle=True)
+                valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size,pin_memory=True)
                 test_loss,test_acc,test_f1_macro=appr.eval(u,test_dataloader,valid_dataloader,trained_task=t,phase='mcl')
                 logger.info('>>> Test on task {:2d} - {:15s}: loss={:.3f}, acc={:5.1f}% <<<'.format(u,data[u]['name'],test_loss,100*test_acc))
 
