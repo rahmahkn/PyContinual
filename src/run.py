@@ -80,7 +80,8 @@ if not args.eval_each_step:
 if args.multi_gpu and args.distributed:
 
     import torch.distributed as dist
-    from torch.utils.data.distributed import DistributedSampler
+    # from torch.utils.data.distributed import DistributedSampler
+    from torch.utils.data.sampler import SubsetRandomSampler
     torch.cuda.set_device(args.local_rank)
     torch.distributed.init_process_group(
         'nccl',
@@ -156,7 +157,7 @@ for t,ncla in taskcla:
             num_train_steps*=args.bingdomains_num_train_epochs_multiplier # every task got refresh, *3
 
     if args.multi_gpu and args.distributed:
-        valid_sampler = DistributedSampler(valid) #TODO: DitributedSequentailSampler
+        valid_sampler = SubsetRandomSampler(valid) #TODO: DitributedSequentailSampler
         valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size)
     else:
         valid_sampler = SequentialSampler(valid)
@@ -166,7 +167,7 @@ for t,ncla in taskcla:
 
 
     if args.multi_gpu and args.distributed:
-        train_sampler = DistributedSampler(train)
+        train_sampler = SubsetRandomSampler(train)
         train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
     else:
         train_sampler = RandomSampler(train)
@@ -255,7 +256,7 @@ for t,ncla in taskcla:
         task_name += [data[u]['name']]
 
         if args.multi_gpu and args.distributed:
-            test_sampler = DistributedSampler(test)
+            test_sampler = SubsetRandomSampler(test)
             test_dataloader = DataLoader(test, sampler=test_sampler, batch_size=args.eval_batch_size)
         else:
             test_sampler = SequentialSampler(test)

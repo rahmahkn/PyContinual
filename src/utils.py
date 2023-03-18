@@ -67,7 +67,7 @@ def compute_mean_std_dataset(dataset):
     # dataset already put ToTensor
     mean=0
     std=0
-    loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True)
     for image, _ in loader:
         mean+=image.mean(3).mean(2)
     mean /= len(dataset)
