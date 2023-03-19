@@ -61,7 +61,7 @@ def get(logger=None,args=None):
     taskcla=[]
 
     # You can change the task heere
-    f_name = 'nusacrowd_random'
+    f_name = 'nusacrowd_all_random'
 
     with open(f_name,'r') as f_random_seq:
         random_sep = f_random_seq.readlines()[args.idrandom].split()
