@@ -329,7 +329,7 @@ for t,ncla in taskcla:
                         
     np.savetxt(args.output + 'tasks.' + str(args.exp_id),task_name,delimiter='\t',fmt="%s")
     
-    utils.visualize('', args.exp_id, args.output, args)
+    utils.visualize('', args.exp_id, args.output, "nusacrowd all random", args.task)
 
 ########################################################################################################################
 

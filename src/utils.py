@@ -471,13 +471,13 @@ def get_average(matrix):
 
 def get_filename(dir_name, exp_id, output, metrics):
   if metrics == "tasks":
-    return f"{dir_name}/{output}{metrics}.{exp_id}"
+    return f"{output}{metrics}.{exp_id}"
     
-  return f"{dir_name}/{output}progressive.{metrics}.{exp_id}"
+  return f"{output}progressive.{metrics}.{exp_id}"
 
-def visualize(dir_name, exp_id, backbone, baseline, case_name):
+def visualize(dir_name, exp_id, output, case_name, task):
   # define metrics
-  list_metrics = ['acc', 'f1_macro', 'lss']
+  list_metrics = ['acc', 'f1_macro', 'lss', 'avg_acc', 'avg_f1_macro', 'avg_lss']
 
   # define tasks
   tasks_const = {
@@ -500,15 +500,15 @@ def visualize(dir_name, exp_id, backbone, baseline, case_name):
     './dat/nusacrowd/nusax_senti_sun': 'NusaX_Sundanese'    
     }
   
-  output = f'{backbone}_{baseline}_.txt'
+  # output = f'{backbone}_{baseline}_.txt'
   tasks_df = pd.read_csv(get_filename(dir_name, exp_id, output, "tasks"), sep="\s+", names=['Task'])
-  if args.task == "nusacrowd":
+  if task == "nusacrowd":
     for i in range (len(tasks_df)):
         tasks_df['Task'][i] = f"{i}. {tasks_const[tasks_df['Task'][i]]}"
 
   # create visualization
   for metrics in list_metrics:
-      if baseline == 'mtl': # if model is MTL, only show last line
+      if 'mtl' in output: # if model is MTL, only show last line
         df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
         df = df.drop(range(16))
         df.transpose().plot()
@@ -517,7 +517,7 @@ def visualize(dir_name, exp_id, backbone, baseline, case_name):
 
       plt.legend(tasks_df['Task'], bbox_to_anchor=(1.0, 1.05))
       plt.legend()
-      plt.title(f'{backbone} {baseline} - {case_name}')
+      plt.title(f'{output.replace("_.txt", "")} - {case_name}')
       plt.xlabel('task order')
       plt.ylabel(metrics)
 

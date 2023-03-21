@@ -182,6 +182,7 @@ if args.task in language_dataset:
             from networks.classification import bert_kim_owm as network
         elif args.baseline=='one':
             from approaches.classification import bert_cnn_one as approach
+            from networks.classification import bert_kim as network
         elif args.baseline == 'ncl':
             from approaches.classification import bert_cnn_ncl as approach
             from networks.classification import bert_kim as network
