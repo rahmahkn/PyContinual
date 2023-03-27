@@ -462,18 +462,18 @@ def make_dir(exp_id, task):
 
 def get_average(matrix):
     mat = np.array(matrix).transpose()
-    
+
     result = []
     for i in range (len(mat)):
         result += [sum(mat[i])/(i+1)]
-        
+
     return result
 
 def get_filename(dir_name, exp_id, output, metrics):
   if metrics == "tasks":
-    return f"{output}{metrics}.{exp_id}"
-    
-  return f"{output}progressive.{metrics}.{exp_id}"
+    return f"{dir_name}{output}{metrics}.{exp_id}"
+
+  return f"{dir_name}{output}progressive.{metrics}.{exp_id}"
 
 def visualize(dir_name, exp_id, output, case_name, task):
   # define metrics
@@ -499,8 +499,7 @@ def visualize(dir_name, exp_id, output, case_name, task):
     './dat/nusacrowd/nusax_senti_nij': 'NusaX_Ngaju',
     './dat/nusacrowd/nusax_senti_sun': 'NusaX_Sundanese'    
     }
-  
-  # output = f'{backbone}_{baseline}_.txt'
+
   tasks_df = pd.read_csv(get_filename(dir_name, exp_id, output, "tasks"), sep="\s+", names=['Task'])
   if task == "nusacrowd":
     for i in range (len(tasks_df)):
@@ -514,13 +513,13 @@ def visualize(dir_name, exp_id, output, case_name, task):
         df.transpose().plot()
       else: # if model is not MTL, show all line
         df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=tasks_df['Task'])
+        df.plot()
 
-      plt.legend(tasks_df['Task'], bbox_to_anchor=(1.0, 1.05))
-      plt.legend()
-      plt.title(f'{output.replace("_.txt", "")} - {case_name}')
+      title = output.split('/')[-1]
+      plt.legend(tasks_df['Task'], bbox_to_anchor=(1.0, 1.1))
+      plt.title(f'{title} - {case_name}')
       plt.xlabel('task order')
       plt.ylabel(metrics)
-
-      plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
-      plt.show()
-      plt.close()
+      plt.ylim(0, 1)
+      
+visualize('', 26, 'res/til_classification/nusacrowd/26 - bert_frozen_ewc_.txt/bert_frozen_ewc_.txt', 'nusacrowd_all_random', 'nusacrowd')
