@@ -477,7 +477,7 @@ def get_filename(dir_name, exp_id, output, metrics):
 
 def visualize(dir_name, exp_id, output, case_name, task):
   # define metrics
-  list_metrics = ['acc', 'f1_macro', 'lss', 'avg_acc', 'avg_f1_macro', 'avg_lss']
+  list_metrics = ['acc', 'f1_macro', 'lss']
 
   # define tasks
   tasks_const = {
@@ -522,4 +522,4 @@ def visualize(dir_name, exp_id, output, case_name, task):
       plt.ylabel(metrics)
       plt.ylim(0, 1)
       
-visualize('', 26, 'res/til_classification/nusacrowd/26 - bert_frozen_ewc_.txt/bert_frozen_ewc_.txt', 'nusacrowd_all_random', 'nusacrowd')
+visualize('', 16, 'res/til_classification/nusacrowd/16 - bert_frozen_ncl_.txt/bert_frozen_ncl_.txt', 'nusacrowd_all_random', 'nusacrowd')
