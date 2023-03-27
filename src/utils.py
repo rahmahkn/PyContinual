@@ -510,18 +510,16 @@ def visualize(dir_name, exp_id, output, case_name, task):
       if 'mtl' in output: # if model is MTL, only show last line
         try:
             if 'avg' in metrics:
-                base_metrics = metrics.replace('avg_', '')
-                base_df = pd.read_csv(get_filename(dir_name, exp_id, output, base_metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
-                np.savetxt(output + f'progressive.{metrics}.' + str(exp_id), get_average(base_df),'%.4f',delimiter='\t')
-                df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
-
+                pass 
             else:
                 df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
+                df = df.drop(range(16))
+                df.transpose().plot()
         except:
             print("File not found")
         
-        df = df.drop(range(16))
-        df.transpose().plot()
+        # df = df.drop(range(16))
+        # df.transpose().plot()
       
       else: # if model is not MTL, show all line
         try:
@@ -551,4 +549,4 @@ def visualize(dir_name, exp_id, output, case_name, task):
       plt.show()
       plt.close()
       
-visualize('', 20, 'res/til_classification/nusacrowd/20 - bert_frozen_ewc_.txt/bert_frozen_ewc_.txt', 'nusacrowd_all_random', 'nusacrowd')
+visualize('', 28, 'res/til_classification/nusacrowd/28 - bert_mtl_.txt/bert_mtl_.txt', 'nusacrowd_all_random', 'nusacrowd')
