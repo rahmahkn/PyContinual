@@ -451,17 +451,17 @@ def is_number(s):
     return False
 ########################################################################################################################
 
-def make_dir(exp_id, task):
-    # Parent Directory path
-    parent_dir = "/res"
+# def make_dir(exp_id, task):
+#     # Parent Directory path
+#     parent_dir = "/res"
     
-    # Path
-    path = os.path.join(parent_dir, exp_id)
-    os.mkdir(path)
-    print("Directory '%s' created" %directory)
+#     # Path
+#     path = os.path.join(parent_dir, exp_id)
+#     os.mkdir(path)
+#     print("Directory '%s' created" %directory)
 
 def get_average(matrix):
-    mat = np.array(matrix).transpose()
+    mat = np.array(matrix)
 
     result = []
     for i in range (len(mat)):
@@ -477,7 +477,7 @@ def get_filename(dir_name, exp_id, output, metrics):
 
 def visualize(dir_name, exp_id, output, case_name, task):
   # define metrics
-  list_metrics = ['acc', 'f1_macro', 'lss']
+  list_metrics = ['acc', 'f1_macro', 'lss', 'avg_acc', 'avg_f1_macro', 'avg_lss']
 
   # define tasks
   tasks_const = {
@@ -508,18 +508,47 @@ def visualize(dir_name, exp_id, output, case_name, task):
   # create visualization
   for metrics in list_metrics:
       if 'mtl' in output: # if model is MTL, only show last line
-        df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
+        try:
+            if 'avg' in metrics:
+                base_metrics = metrics.replace('avg_', '')
+                base_df = pd.read_csv(get_filename(dir_name, exp_id, output, base_metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
+                np.savetxt(output + f'progressive.{metrics}.' + str(exp_id), get_average(base_df),'%.4f',delimiter='\t')
+                df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
+
+            else:
+                df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
+        except:
+            print("File not found")
+        
         df = df.drop(range(16))
         df.transpose().plot()
+      
       else: # if model is not MTL, show all line
-        df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=tasks_df['Task'])
+        try:
+            if 'avg' in metrics:
+                base_metrics = metrics.replace('avg_', '')
+                base_df = pd.read_csv(get_filename(dir_name, exp_id, output, base_metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
+                np.savetxt(output + f'progressive.{metrics}.' + str(exp_id), get_average(base_df),'%.4f',delimiter='\t')
+                df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
+
+            else:
+                df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
+        except:
+            print("File not found")
+        
         df.plot()
 
       title = output.split('/')[-1]
-      plt.legend(tasks_df['Task'], bbox_to_anchor=(1.0, 1.1))
+      plt.legend(tasks_df['Task'], bbox_to_anchor=(1.0, 1.0))
       plt.title(f'{title} - {case_name}')
       plt.xlabel('task order')
       plt.ylabel(metrics)
-      plt.ylim(0, 1)
       
-visualize('', 16, 'res/til_classification/nusacrowd/16 - bert_frozen_ncl_.txt/bert_frozen_ncl_.txt', 'nusacrowd_all_random', 'nusacrowd')
+      if 'lss' not in metrics:
+        plt.ylim(0, 1)
+      
+      plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
+      plt.show()
+      plt.close()
+      
+visualize('', 20, 'res/til_classification/nusacrowd/20 - bert_frozen_ewc_.txt/bert_frozen_ewc_.txt', 'nusacrowd_all_random', 'nusacrowd')
