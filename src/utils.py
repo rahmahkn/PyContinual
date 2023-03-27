@@ -503,7 +503,7 @@ def visualize(dir_name, exp_id, output, case_name, task):
   tasks_df = pd.read_csv(get_filename(dir_name, exp_id, output, "tasks"), sep="\s+", names=['Task'])
   if task == "nusacrowd":
     for i in range (len(tasks_df)):
-        tasks_df['Task'][i] = f"{i}. {tasks_const[tasks_df['Task'][i]]}"
+        tasks_df['Task'][i] = f"{i+1}. {tasks_const[tasks_df['Task'][i]]}"
 
   # create visualization
   for metrics in list_metrics:
@@ -517,9 +517,6 @@ def visualize(dir_name, exp_id, output, case_name, task):
                 df.transpose().plot()
         except:
             print("File not found")
-        
-        # df = df.drop(range(16))
-        # df.transpose().plot()
       
       else: # if model is not MTL, show all line
         try:
@@ -538,15 +535,14 @@ def visualize(dir_name, exp_id, output, case_name, task):
 
       title = output.split('/')[-1]
       plt.legend(tasks_df['Task'], bbox_to_anchor=(1.0, 1.0))
-      plt.title(f'{title} - {case_name}')
-      plt.xlabel('task order')
+      plt.title(f'{title.replace("_.txt", "")} - {case_name}')
+      plt.xticks(range(17), [i for i in range (1, 18)])
+      plt.xlabel('number of tasks')
       plt.ylabel(metrics)
-      
+        
       if 'lss' not in metrics:
         plt.ylim(0, 1)
       
       plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
-      plt.show()
-      plt.close()
       
 visualize('', 28, 'res/til_classification/nusacrowd/28 - bert_mtl_.txt/bert_mtl_.txt', 'nusacrowd_all_random', 'nusacrowd')
