@@ -176,7 +176,8 @@ def fisher_matrix_diag_bert(t,train,device,model,criterion,sbatch=20):
     model.train()
 
     for i in tqdm(range(0,len(train),sbatch),desc='Fisher diagonal',ncols=100,ascii=True):
-        b=torch.LongTensor(np.arange(i,np.min([i+sbatch,len(train)]))).cuda()
+#         b=torch.LongTensor(np.arange(i,np.min([i+sbatch,len(train)]))).cuda()
+        b=torch.LongTensor(np.arange(i,np.min([i+sbatch,len(train)])))
         batch=train[b]
         batch = [
             bat.to(device) if bat is not None else None for bat in batch]
