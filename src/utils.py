@@ -452,14 +452,29 @@ def is_number(s):
     return False
 ########################################################################################################################
 
-# def make_dir(exp_id, task):
-#     # Parent Directory path
-#     parent_dir = "/res"
-    
-#     # Path
-#     path = os.path.join(parent_dir, exp_id)
-#     os.mkdir(path)
-#     print("Directory '%s' created" %directory)
+# define metrics
+list_metrics = ['acc', 'f1_macro', 'lss', 'avg_acc', 'avg_f1_macro', 'avg_lss']
+
+# define tasks
+tasks_const = {
+'./dat/nusacrowd/code_mixed_jv_id': 'CodeMixedJVID_Javanese',
+'./dat/nusacrowd/emot': 'Emot_Indonesian',
+'./dat/nusacrowd/emotcmt': 'EmotCMT_Indonesian',
+'./dat/nusacrowd/imdb_jv': 'IMDb_Javanese',
+'./dat/nusacrowd/karonese_sentiment': 'Sentiment_Karonese',
+'./dat/nusacrowd/smsa': 'SmSA_Indonesian',
+'./dat/nusacrowd/nusax_senti_ace': 'NusaX_Acehnese',
+'./dat/nusacrowd/nusax_senti_ban': 'NusaX_Balinese',
+'./dat/nusacrowd/nusax_senti_bbc': 'NusaX_TobaBatak',
+'./dat/nusacrowd/nusax_senti_bjn': 'NusaX_Banjarese',
+'./dat/nusacrowd/nusax_senti_bug': 'NusaX_Buginese',
+'./dat/nusacrowd/nusax_senti_ind': 'NusaX_Indonesian',
+'./dat/nusacrowd/nusax_senti_jav': 'NusaX_Javanese',
+'./dat/nusacrowd/nusax_senti_mad': 'NusaX_Madurese',
+'./dat/nusacrowd/nusax_senti_min': 'NusaX_Minangkabau',
+'./dat/nusacrowd/nusax_senti_nij': 'NusaX_Ngaju',
+'./dat/nusacrowd/nusax_senti_sun': 'NusaX_Sundanese'    
+}
 
 def get_average(matrix):
     mat = np.array(matrix)
@@ -477,29 +492,7 @@ def get_filename(dir_name, exp_id, output, metrics):
   return f"{dir_name}{output}progressive.{metrics}.{exp_id}"
 
 def visualize(dir_name, exp_id, output, case_name, task):
-  # define metrics
-  list_metrics = ['acc', 'f1_macro', 'lss', 'avg_acc', 'avg_f1_macro', 'avg_lss']
 
-  # define tasks
-  tasks_const = {
-    './dat/nusacrowd/code_mixed_jv_id': 'CodeMixedJVID_Javanese',
-    './dat/nusacrowd/emot': 'Emot_Indonesian',
-    './dat/nusacrowd/emotcmt': 'EmotCMT_Indonesian',
-    './dat/nusacrowd/imdb_jv': 'IMDb_Javanese',
-    './dat/nusacrowd/karonese_sentiment': 'Sentiment_Karonese',
-    './dat/nusacrowd/smsa': 'SmSA_Indonesian',
-    './dat/nusacrowd/nusax_senti_ace': 'NusaX_Acehnese',
-    './dat/nusacrowd/nusax_senti_ban': 'NusaX_Balinese',
-    './dat/nusacrowd/nusax_senti_bbc': 'NusaX_TobaBatak',
-    './dat/nusacrowd/nusax_senti_bjn': 'NusaX_Banjarese',
-    './dat/nusacrowd/nusax_senti_bug': 'NusaX_Buginese',
-    './dat/nusacrowd/nusax_senti_ind': 'NusaX_Indonesian',
-    './dat/nusacrowd/nusax_senti_jav': 'NusaX_Javanese',
-    './dat/nusacrowd/nusax_senti_mad': 'NusaX_Madurese',
-    './dat/nusacrowd/nusax_senti_min': 'NusaX_Minangkabau',
-    './dat/nusacrowd/nusax_senti_nij': 'NusaX_Ngaju',
-    './dat/nusacrowd/nusax_senti_sun': 'NusaX_Sundanese'    
-    }
 
   tasks_df = pd.read_csv(get_filename(dir_name, exp_id, output, "tasks"), sep="\s+", names=['Task'])
   if task == "nusacrowd":
@@ -546,4 +539,4 @@ def visualize(dir_name, exp_id, output, case_name, task):
       
       plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
       
-visualize('', 28, 'res/til_classification/nusacrowd/28 - bert_mtl_.txt/bert_mtl_.txt', 'nusacrowd_all_random', 'nusacrowd')
+visualize('', 17, 'res/til_classification/nusacrowd/17 - bert_frozen_a-gem_.txt/bert_frozen_a-gem_.txt', 'nusacrowd_all_random', 'nusacrowd')
