@@ -491,9 +491,10 @@ def get_filename(dir_name, exp_id, output, metrics):
 
   return f"{dir_name}{output}progressive.{metrics}.{exp_id}"
 
+def get_output(backbone, baseline, exp_id):
+    return f"res/til_classification/nusacrowd/{exp_id} - {backbone}_{baseline}_.txt/{backbone}_{baseline}_.txt"
+
 def visualize(dir_name, exp_id, output, case_name, task):
-
-
   tasks_df = pd.read_csv(get_filename(dir_name, exp_id, output, "tasks"), sep="\s+", names=['Task'])
   if task == "nusacrowd":
     for i in range (len(tasks_df)):
@@ -539,4 +540,52 @@ def visualize(dir_name, exp_id, output, case_name, task):
       
       plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
       
-visualize('', 17, 'res/til_classification/nusacrowd/17 - bert_frozen_a-gem_.txt/bert_frozen_a-gem_.txt', 'nusacrowd_all_random', 'nusacrowd')
+def calculate(dataframe, type):
+  if type == "avg":
+    mean = dataframe.mean(axis=1)
+    return [mean[i] for i in range(len(dataframe))]
+
+  elif type == "std":
+    std = dataframe.std(axis=1)
+    return [std[i] for i in range(len(dataframe))]
+
+def create_viz(dataframe, title, legend, xlabel, ylabel, filename):
+    dataframe.plot()
+    if 'lss' not in filename:
+        plt.ylim(0, 1)
+    plt.show()
+    plt.close()
+
+    plt.plot(calculate(dataframe, "avg"), label=legend)
+    plt.errorbar([i for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o')
+    plt.legend(bbox_to_anchor=(1.0, 1.05))
+    plt.title(title.replace('_.txt', ''))
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
+    if 'lss' not in filename:
+        plt.ylim(0, 1)
+
+    plt.savefig(filename, bbox_inches='tight')
+    plt.show()
+    plt.close()
+
+def merge_viz(dir_name, list_exp_id, backbone, baseline, case_name, metrics):
+  n = len(list_exp_id)
+  
+  # bikin n dataframe
+  df = pd.DataFrame(columns=list_exp_id)
+  
+  for exp_id in list_exp_id:
+    df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(backbone, baseline, exp_id), metrics), sep="\s+", names=[exp_id])
+
+  tasks_df = pd.read_csv(get_filename(dir_name, list_exp_id[0], get_output(backbone, baseline, list_exp_id[0]), "tasks"), sep="\s+", names=['Task'])
+
+  for i in range (len(tasks_df)):
+    tasks_df['Task'][i] = tasks_const[tasks_df['Task'][i]]
+
+  create_viz(df, f'{backbone}_{baseline} - {case_name}', tasks_df['Task'], 'number of tasks', metrics, f"viz/{backbone}_{baseline}_{'-'.join([str(i) for i in list_exp_id])}_{metrics}.png")
+
+if __name__ == "__main__":
+    # visualize('', 29, 'res/til_classification/nusacrowd/29 - bert_frozen_a-gem_.txt/bert_frozen_a-gem_.txt', 'nusacrowd_all_random', 'nusacrowd')
+    merge_viz('', [40, 41, 42], 'bert_adapter', 'a-gem', 'nusacrowd all random', 'avg_lss')
