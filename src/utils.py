@@ -588,4 +588,4 @@ def merge_viz(dir_name, list_exp_id, backbone, baseline, case_name, metrics):
 
 if __name__ == "__main__":
     # visualize('', 29, 'res/til_classification/nusacrowd/29 - bert_frozen_a-gem_.txt/bert_frozen_a-gem_.txt', 'nusacrowd_all_random', 'nusacrowd')
-    merge_viz('', [40, 41, 42], 'bert_adapter', 'a-gem', 'nusacrowd all random', 'avg_lss')
+    merge_viz('', [22, 48, 49], 'bert', 'one', 'nusacrowd all random', 'avg_lss')
