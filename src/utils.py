@@ -452,14 +452,29 @@ def is_number(s):
     return False
 ########################################################################################################################
 
-# def make_dir(exp_id, task):
-#     # Parent Directory path
-#     parent_dir = "/res"
-    
-#     # Path
-#     path = os.path.join(parent_dir, exp_id)
-#     os.mkdir(path)
-#     print("Directory '%s' created" %directory)
+# define metrics
+list_metrics = ['acc', 'f1_macro', 'lss', 'avg_acc', 'avg_f1_macro', 'avg_lss']
+
+# define tasks
+tasks_const = {
+'./dat/nusacrowd/code_mixed_jv_id': 'CodeMixedJVID_Javanese',
+'./dat/nusacrowd/emot': 'Emot_Indonesian',
+'./dat/nusacrowd/emotcmt': 'EmotCMT_Indonesian',
+'./dat/nusacrowd/imdb_jv': 'IMDb_Javanese',
+'./dat/nusacrowd/karonese_sentiment': 'Sentiment_Karonese',
+'./dat/nusacrowd/smsa': 'SmSA_Indonesian',
+'./dat/nusacrowd/nusax_senti_ace': 'NusaX_Acehnese',
+'./dat/nusacrowd/nusax_senti_ban': 'NusaX_Balinese',
+'./dat/nusacrowd/nusax_senti_bbc': 'NusaX_TobaBatak',
+'./dat/nusacrowd/nusax_senti_bjn': 'NusaX_Banjarese',
+'./dat/nusacrowd/nusax_senti_bug': 'NusaX_Buginese',
+'./dat/nusacrowd/nusax_senti_ind': 'NusaX_Indonesian',
+'./dat/nusacrowd/nusax_senti_jav': 'NusaX_Javanese',
+'./dat/nusacrowd/nusax_senti_mad': 'NusaX_Madurese',
+'./dat/nusacrowd/nusax_senti_min': 'NusaX_Minangkabau',
+'./dat/nusacrowd/nusax_senti_nij': 'NusaX_Ngaju',
+'./dat/nusacrowd/nusax_senti_sun': 'NusaX_Sundanese'    
+}
 
 def get_average(matrix):
     mat = np.array(matrix)
@@ -476,31 +491,10 @@ def get_filename(dir_name, exp_id, output, metrics):
 
   return f"{dir_name}{output}progressive.{metrics}.{exp_id}"
 
+def get_output(backbone, baseline, exp_id):
+    return f"res/til_classification/nusacrowd/{exp_id} - {backbone}_{baseline}_.txt/{backbone}_{baseline}_.txt"
+
 def visualize(dir_name, exp_id, output, case_name, task):
-  # define metrics
-  list_metrics = ['acc', 'f1_macro', 'lss', 'avg_acc', 'avg_f1_macro', 'avg_lss']
-
-  # define tasks
-  tasks_const = {
-    './dat/nusacrowd/code_mixed_jv_id': 'CodeMixedJVID_Javanese',
-    './dat/nusacrowd/emot': 'Emot_Indonesian',
-    './dat/nusacrowd/emotcmt': 'EmotCMT_Indonesian',
-    './dat/nusacrowd/imdb_jv': 'IMDb_Javanese',
-    './dat/nusacrowd/karonese_sentiment': 'Sentiment_Karonese',
-    './dat/nusacrowd/smsa': 'SmSA_Indonesian',
-    './dat/nusacrowd/nusax_senti_ace': 'NusaX_Acehnese',
-    './dat/nusacrowd/nusax_senti_ban': 'NusaX_Balinese',
-    './dat/nusacrowd/nusax_senti_bbc': 'NusaX_TobaBatak',
-    './dat/nusacrowd/nusax_senti_bjn': 'NusaX_Banjarese',
-    './dat/nusacrowd/nusax_senti_bug': 'NusaX_Buginese',
-    './dat/nusacrowd/nusax_senti_ind': 'NusaX_Indonesian',
-    './dat/nusacrowd/nusax_senti_jav': 'NusaX_Javanese',
-    './dat/nusacrowd/nusax_senti_mad': 'NusaX_Madurese',
-    './dat/nusacrowd/nusax_senti_min': 'NusaX_Minangkabau',
-    './dat/nusacrowd/nusax_senti_nij': 'NusaX_Ngaju',
-    './dat/nusacrowd/nusax_senti_sun': 'NusaX_Sundanese'    
-    }
-
   tasks_df = pd.read_csv(get_filename(dir_name, exp_id, output, "tasks"), sep="\s+", names=['Task'])
   if task == "nusacrowd":
     for i in range (len(tasks_df)):
@@ -546,4 +540,52 @@ def visualize(dir_name, exp_id, output, case_name, task):
       
       plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
       
-visualize('', 28, 'res/til_classification/nusacrowd/28 - bert_mtl_.txt/bert_mtl_.txt', 'nusacrowd_all_random', 'nusacrowd')
+def calculate(dataframe, type):
+  if type == "avg":
+    mean = dataframe.mean(axis=1)
+    return [mean[i] for i in range(len(dataframe))]
+
+  elif type == "std":
+    std = dataframe.std(axis=1)
+    return [std[i] for i in range(len(dataframe))]
+
+def create_viz(dataframe, title, legend, xlabel, ylabel, filename):
+    dataframe.plot()
+    if 'lss' not in filename:
+        plt.ylim(0, 1)
+    plt.show()
+    plt.close()
+
+    plt.plot(calculate(dataframe, "avg"), label=legend)
+    plt.errorbar([i for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o')
+    plt.legend(bbox_to_anchor=(1.0, 1.05))
+    plt.title(title.replace('_.txt', ''))
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
+    if 'lss' not in filename:
+        plt.ylim(0, 1)
+
+    plt.savefig(filename, bbox_inches='tight')
+    plt.show()
+    plt.close()
+
+def merge_viz(dir_name, list_exp_id, backbone, baseline, case_name, metrics):
+  n = len(list_exp_id)
+  
+  # bikin n dataframe
+  df = pd.DataFrame(columns=list_exp_id)
+  
+  for exp_id in list_exp_id:
+    df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(backbone, baseline, exp_id), metrics), sep="\s+", names=[exp_id])
+
+  tasks_df = pd.read_csv(get_filename(dir_name, list_exp_id[0], get_output(backbone, baseline, list_exp_id[0]), "tasks"), sep="\s+", names=['Task'])
+
+  for i in range (len(tasks_df)):
+    tasks_df['Task'][i] = tasks_const[tasks_df['Task'][i]]
+
+  create_viz(df, f'{backbone}_{baseline} - {case_name}', tasks_df['Task'], 'number of tasks', metrics, f"viz/{backbone}_{baseline}_{'-'.join([str(i) for i in list_exp_id])}_{metrics}.png")
+
+if __name__ == "__main__":
+    # visualize('', 29, 'res/til_classification/nusacrowd/29 - bert_frozen_a-gem_.txt/bert_frozen_a-gem_.txt', 'nusacrowd_all_random', 'nusacrowd')
+    merge_viz('', [22, 48, 49], 'bert', 'one', 'nusacrowd all random', 'avg_lss')
