@@ -549,43 +549,117 @@ def calculate(dataframe, type):
     std = dataframe.std(axis=1)
     return [std[i] for i in range(len(dataframe))]
 
-def create_viz(dataframe, title, legend, xlabel, ylabel, filename):
-    dataframe.plot()
-    if 'lss' not in filename:
-        plt.ylim(0, 1)
-    plt.show()
-    plt.close()
+def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename):
+    # dataframe.plot()
+    # if 'lss' not in filename:
+    #     plt.ylim(0, 1)
+    # plt.show()
+    # plt.close()
 
-    plt.plot(calculate(dataframe, "avg"), label=legend)
-    plt.errorbar([i for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o')
-    plt.legend(bbox_to_anchor=(1.0, 1.05))
+    # plt.plot(calculate(dataframe, "avg"), label=legend)
+    # plt.errorbar([i for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o')
+    # plt.legend(bbox_to_anchor=(1.0, 1.05))
+    # plt.title(title.replace('_.txt', ''))
+    # plt.xlabel(xlabel)
+    # plt.ylabel(ylabel)
+
+    # if 'lss' not in filename:
+    #     plt.ylim(0, 1)
+
+    # plt.savefig(filename, bbox_inches='tight')
+    # plt.show()
+    # plt.close()
+    
+    n = len(list_dataframe)
+  
+    # bikin n dataframe
+    df_avg = pd.DataFrame(columns=[i for i in range(n)])
+    df_std = pd.DataFrame(columns=[i for i in range(n)])
+    
+    for i in range(n):
+        df_avg[i] = calculate(list_dataframe[i], "avg")
+        df_std[i] = calculate(list_dataframe[i], "std")
+    
+    # print(df_avg)    
+    # print(df_std)
+    plt.plot(df_avg)
     plt.title(title.replace('_.txt', ''))
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-
+    plt.errorbar(x=[i for i in range(17)], y=df_avg.iloc[:, 0], yerr=df_std.iloc[:, 0], fmt ='o')
+    
     if 'lss' not in filename:
         plt.ylim(0, 1)
-
-    plt.savefig(filename, bbox_inches='tight')
+    
     plt.show()
-    plt.close()
+    plt.savefig(filename, bbox_inches='tight')
+        
 
-def merge_viz(dir_name, list_exp_id, backbone, baseline, case_name, metrics):
+def merge_viz(dir_name, list_exp_id, list_backbone, baseline, case_name, metrics):
   n = len(list_exp_id)
   
-  # bikin n dataframe
-  df = pd.DataFrame(columns=list_exp_id)
+  # bikin list dataframe
+  list_df = []
   
-  for exp_id in list_exp_id:
-    df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(backbone, baseline, exp_id), metrics), sep="\s+", names=[exp_id])
+  for backbone in list_backbone:
+    df = pd.DataFrame(columns=list_exp_id)
+      
+    for exp_id in list_exp_id:
+        df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(backbone, baseline, exp_id), metrics), sep="\s+", names=[exp_id])
+        
+    list_df += [df]
 
   tasks_df = pd.read_csv(get_filename(dir_name, list_exp_id[0], get_output(backbone, baseline, list_exp_id[0]), "tasks"), sep="\s+", names=['Task'])
 
   for i in range (len(tasks_df)):
     tasks_df['Task'][i] = tasks_const[tasks_df['Task'][i]]
 
-  create_viz(df, f'{backbone}_{baseline} - {case_name}', tasks_df['Task'], 'number of tasks', metrics, f"viz/{backbone}_{baseline}_{'-'.join([str(i) for i in list_exp_id])}_{metrics}.png")
+  create_viz(list_df, f'{backbone}_{baseline} - {case_name} - {metrics}', tasks_df['Task'], 'number of tasks', metrics, f"viz/{backbone}_{baseline}_{'-'.join([str(i) for i in list_exp_id])}_{metrics}.png")
 
+def calculate_final_accuracy(mat):
+  avg_per_iter = []
+
+  for row in mat:
+    avg_per_iter += [np.average(row)]
+
+  return np.average(avg_per_iter)
+
+def calculate_bwt(mat):
+  sigma = 0
+  n = len(mat) # number of tasks
+
+  for i in range(0, n-1):
+    sigma += (mat[n-1][i] - mat[i][i])
+
+  return sigma / (n-1)
+
+def calculate_fwt(mat, b):
+  sigma = 0
+  n = len(mat) # number of tasks
+  avg_b = np.average(b)
+
+  for i in range(1, n-1):
+    sigma += (mat[i-1][i] - avg_b)
+
+  return sigma / (n-1)
+
+def create_result(acc, f1_macro, lss, avg_acc, avg_f1_macro, avg_lss): #nanti 0nya diganti
+    avg_acc = np.average(avg_acc)
+    avg_f1_macro = np.average(avg_f1_macro)
+    avg_lss = np.average(avg_lss)
+    
+    last_acc = np.average(acc[-1])
+    last_f1_macro = np.average(f1_macro[-1])
+    last_lss = np.average(lss[-1])
+    
+    forward_transfer = 0
+    backward_transfer = 0
+    
+    result = [avg_acc, avg_f1_macro, avg_lss, last_acc, last_f1_macro, last_lss, forward_transfer, backward_transfer]
+    
+    np.savetxt(args.output + 'result.' + str(args.exp_id), result, '%.4f', delimiter='\t')
+    
 if __name__ == "__main__":
     # visualize('', 29, 'res/til_classification/nusacrowd/29 - bert_frozen_a-gem_.txt/bert_frozen_a-gem_.txt', 'nusacrowd_all_random', 'nusacrowd')
-    merge_viz('', [22, 48, 49], 'bert', 'one', 'nusacrowd all random', 'avg_lss')
+    
+    # create viz for backbone and baseline combination
+    for metrics in ['avg_acc', 'avg_f1_macro', 'avg_lss']:
+        merge_viz('', [22, 48, 49], ['bert'], 'one', 'nusacrowd all random', metrics)
