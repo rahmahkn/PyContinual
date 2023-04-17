@@ -654,32 +654,18 @@ def calculate_metrics(exp_id, backbone, baseline):
         mat_lss = [list(map(float, line.strip().split('\t'))) for line in fp]
         
     # b = [0.0903,0.0957,0.0843,0.0882,0.0910,0.0847,0.0998,0.0992,0.0906,0.0756,0.0743,0.0781,0.0839,0.0873,0.0778,0.0810,0.0780,0.0791,0.0884,0.0867]
-        
+    
+    # calculate result    
     result = [exp_id, backbone, baseline,
               calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
               calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
               calculate_bwt(mat_acc), 99999] # 99999 is for FWT (masih belum bisa dihitung)
-        
+    
+    # write result to csv file    
     with open('res/til_classification/result.csv', 'a', newline='') as fp:
         csv_writer = csv.writer(fp, delimiter=',')
         csv_writer.writerow(result)
-        
-def create_result(acc, f1_macro, lss, avg_acc, avg_f1_macro, avg_lss): #nanti 0nya diganti
-    avg_acc = np.average(avg_acc)
-    avg_f1_macro = np.average(avg_f1_macro)
-    avg_lss = np.average(avg_lss)
-    
-    last_acc = np.average(acc[-1])
-    last_f1_macro = np.average(f1_macro[-1])
-    last_lss = np.average(lss[-1])
-    
-    forward_transfer = 0
-    backward_transfer = 0
-    
-    result = [avg_acc, avg_f1_macro, avg_lss, last_acc, last_f1_macro, last_lss, forward_transfer, backward_transfer]
-    
-    np.savetxt(args.output + 'result.' + str(args.exp_id), result, '%.4f', delimiter='\t')
-    
+            
 if __name__ == "__main__":
     # visualize an experiment
     # visualize('', 29, 'res/til_classification/nusacrowd/29 - bert_frozen_a-gem_.txt/bert_frozen_a-gem_.txt', 'nusacrowd_all_random', 'nusacrowd')
@@ -689,4 +675,9 @@ if __name__ == "__main__":
     #     merge_viz('', [22, 48, 49], ['bert'], 'one', 'nusacrowd all random', metrics)
     
     # recalculate experiment
-    calculate_metrics(16, 'bert_frozen', 'ncl')
+    # calculate_metrics(16, 'bert_frozen', 'ncl')
+    
+    list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
+        
+    for index, row in list_exp.iterrows():
+        calculate_metrics(int(row['exp_id']), row['backbone'], row['baseline'])
