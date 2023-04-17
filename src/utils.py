@@ -7,6 +7,7 @@ import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 
 ########################################################################################################################
 
@@ -614,13 +615,13 @@ def merge_viz(dir_name, list_exp_id, list_backbone, baseline, case_name, metrics
 
   create_viz(list_df, f'{backbone}_{baseline} - {case_name} - {metrics}', tasks_df['Task'], 'number of tasks', metrics, f"viz/{backbone}_{baseline}_{'-'.join([str(i) for i in list_exp_id])}_{metrics}.png")
 
-def calculate_final_accuracy(mat):
+def calculate_avg_metrics(mat):
   avg_per_iter = []
 
   for row in mat:
     avg_per_iter += [np.average(row)]
 
-  return np.average(avg_per_iter)
+  return "{:.4f}".format(np.average(avg_per_iter))
 
 def calculate_bwt(mat):
   sigma = 0
@@ -629,18 +630,40 @@ def calculate_bwt(mat):
   for i in range(0, n-1):
     sigma += (mat[n-1][i] - mat[i][i])
 
-  return sigma / (n-1)
+  return "{:.4f}".format(sigma / (n-1))
 
 def calculate_fwt(mat, b):
   sigma = 0
   n = len(mat) # number of tasks
-  avg_b = np.average(b)
 
-  for i in range(1, n-1):
-    sigma += (mat[i-1][i] - avg_b)
+  for i in range(1, n):
+    sigma += (mat[i-1][i] - b[i])
 
-  return sigma / (n-1)
+  return "{:.4f}".format(sigma / (n-1))
 
+def calculate_metrics(exp_id, backbone, baseline):
+    # load data from text
+    output = get_output(backbone, baseline, exp_id)
+    with open(f'{output}progressive.acc.{exp_id}') as fp:
+        mat_acc = [list(map(float, line.strip().split('\t'))) for line in fp]
+        
+    with open(f'{output}progressive.f1_macro.{exp_id}') as fp:
+        mat_f1_macro = [list(map(float, line.strip().split('\t'))) for line in fp]
+        
+    with open(f'{output}progressive.lss.{exp_id}') as fp:
+        mat_lss = [list(map(float, line.strip().split('\t'))) for line in fp]
+        
+    # b = [0.0903,0.0957,0.0843,0.0882,0.0910,0.0847,0.0998,0.0992,0.0906,0.0756,0.0743,0.0781,0.0839,0.0873,0.0778,0.0810,0.0780,0.0791,0.0884,0.0867]
+        
+    result = [exp_id, backbone, baseline,
+              calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
+              calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
+              calculate_bwt(mat_acc), 99999] # 99999 is for FWT (masih belum bisa dihitung)
+        
+    with open('res/til_classification/result.csv', 'a', newline='') as fp:
+        csv_writer = csv.writer(fp, delimiter=',')
+        csv_writer.writerow(result)
+        
 def create_result(acc, f1_macro, lss, avg_acc, avg_f1_macro, avg_lss): #nanti 0nya diganti
     avg_acc = np.average(avg_acc)
     avg_f1_macro = np.average(avg_f1_macro)
@@ -658,8 +681,12 @@ def create_result(acc, f1_macro, lss, avg_acc, avg_f1_macro, avg_lss): #nanti 0n
     np.savetxt(args.output + 'result.' + str(args.exp_id), result, '%.4f', delimiter='\t')
     
 if __name__ == "__main__":
+    # visualize an experiment
     # visualize('', 29, 'res/til_classification/nusacrowd/29 - bert_frozen_a-gem_.txt/bert_frozen_a-gem_.txt', 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    for metrics in ['avg_acc', 'avg_f1_macro', 'avg_lss']:
-        merge_viz('', [22, 48, 49], ['bert'], 'one', 'nusacrowd all random', metrics)
+    # for metrics in ['avg_acc', 'avg_f1_macro', 'avg_lss']:
+    #     merge_viz('', [22, 48, 49], ['bert'], 'one', 'nusacrowd all random', metrics)
+    
+    # recalculate experiment
+    calculate_metrics(16, 'bert_frozen', 'ncl')
