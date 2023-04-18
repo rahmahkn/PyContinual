@@ -479,10 +479,11 @@ tasks_const = {
 
 def get_average(matrix):
     mat = np.array(matrix)
+    n_tasks = len(mat)
 
     result = []
-    for i in range (len(mat)):
-        result += [sum(mat[i])/(i+1)]
+    for i in range (n_tasks):
+        result += [sum(mat[i])/n_tasks]
 
     return result
 
@@ -550,70 +551,65 @@ def calculate(dataframe, type):
     std = dataframe.std(axis=1)
     return [std[i] for i in range(len(dataframe))]
 
-def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename):
-    # dataframe.plot()
-    # if 'lss' not in filename:
-    #     plt.ylim(0, 1)
+def create_viz(dataframe, title, legend, xlabel, ylabel, filename, list_exp_id):
+    dataframe.plot()
+    if 'lss' not in filename:
+        plt.ylim(0, 1)
     # plt.show()
-    # plt.close()
+    plt.close()
 
-    # plt.plot(calculate(dataframe, "avg"), label=legend)
-    # plt.errorbar([i for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o')
-    # plt.legend(bbox_to_anchor=(1.0, 1.05))
+    plt.plot(calculate(dataframe, "avg"), label=legend)
+    plt.errorbar([i for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o')
+    plt.title(title.replace('_.txt', ''))
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
+    if 'lss' not in filename:
+        plt.ylim(0, 1)
+
+    plt.savefig(filename, bbox_inches='tight')
+    # plt.show()
+    plt.close()
+    
+    # print(dataframe)
+    # n = len(dataframe)
+  
+    # # bikin n dataframe
+    # df_avg = pd.DataFrame(columns=[i for i in range(n)])
+    # df_std = pd.DataFrame(columns=[i for i in range(n)])
+    
+    # for exp_id in list_exp_id:
+    #     df_avg[i] = calculate(dataframe[exp_id], "avg")
+    #     df_std[i] = calculate(dataframe[exp_id], "std")
+    
+    # # print(df_avg)    
+    # # print(df_std)
+    # plt.plot(df_avg)
     # plt.title(title.replace('_.txt', ''))
-    # plt.xlabel(xlabel)
-    # plt.ylabel(ylabel)
-
+    # plt.errorbar(x=[i for i in range(17)], y=df_avg.iloc[:, 0], yerr=df_std.iloc[:, 0], fmt ='o')
+    
     # if 'lss' not in filename:
     #     plt.ylim(0, 1)
-
+    
     # plt.savefig(filename, bbox_inches='tight')
     # plt.show()
     # plt.close()
-    
-    n = len(list_dataframe)
-  
-    # bikin n dataframe
-    df_avg = pd.DataFrame(columns=[i for i in range(n)])
-    df_std = pd.DataFrame(columns=[i for i in range(n)])
-    
-    for i in range(n):
-        df_avg[i] = calculate(list_dataframe[i], "avg")
-        df_std[i] = calculate(list_dataframe[i], "std")
-    
-    # print(df_avg)    
-    # print(df_std)
-    plt.plot(df_avg)
-    plt.title(title.replace('_.txt', ''))
-    plt.errorbar(x=[i for i in range(17)], y=df_avg.iloc[:, 0], yerr=df_std.iloc[:, 0], fmt ='o')
-    
-    if 'lss' not in filename:
-        plt.ylim(0, 1)
-    
-    plt.show()
-    plt.savefig(filename, bbox_inches='tight')
         
-
-def merge_viz(dir_name, list_exp_id, list_backbone, baseline, case_name, metrics):
+def merge_viz(dir_name, list_exp_id, backbone, baseline, case_name, metrics):
   n = len(list_exp_id)
-  
-  # bikin list dataframe
-  list_df = []
-  
-  for backbone in list_backbone:
-    df = pd.DataFrame(columns=list_exp_id)
-      
-    for exp_id in list_exp_id:
-        df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(backbone, baseline, exp_id), metrics), sep="\s+", names=[exp_id])
-        
-    list_df += [df]
+
+  # bikin n dataframe
+  df = pd.DataFrame(columns=list_exp_id)
+
+  for exp_id in list_exp_id:
+    df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(backbone, baseline, exp_id), metrics), sep="\s+", names=[exp_id])
 
   tasks_df = pd.read_csv(get_filename(dir_name, list_exp_id[0], get_output(backbone, baseline, list_exp_id[0]), "tasks"), sep="\s+", names=['Task'])
 
   for i in range (len(tasks_df)):
     tasks_df['Task'][i] = tasks_const[tasks_df['Task'][i]]
 
-  create_viz(list_df, f'{backbone}_{baseline} - {case_name} - {metrics}', tasks_df['Task'], 'number of tasks', metrics, f"viz/{backbone}_{baseline}_{'-'.join([str(i) for i in list_exp_id])}_{metrics}.png")
+  create_viz(df, f'{backbone}_{baseline} - {case_name}', tasks_df['Task'], 'number of tasks', metrics, f"viz/{backbone}_{baseline}/{backbone}_{baseline}_{'-'.join([str(i) for i in list_exp_id])}_{metrics}.png", list_exp_id)
 
 def calculate_avg_metrics(mat):
   avg_per_iter = []
@@ -665,19 +661,28 @@ def calculate_metrics(exp_id, backbone, baseline):
     with open('res/til_classification/result.csv', 'a', newline='') as fp:
         csv_writer = csv.writer(fp, delimiter=',')
         csv_writer.writerow(result)
+
+def run_create_viz(backbone, baseline, title):
+    list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
+    list_exp_id = list_exp[(list_exp['backbone'] == backbone) & (list_exp['baseline'] == baseline)]
+    
+    for metrics in ['avg_acc', 'avg_f1_macro', 'avg_lss']:
+        merge_viz('', list_exp_id['exp_id'].to_list(), backbone, baseline, title, metrics)
             
 if __name__ == "__main__":
+    list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
+    
     # visualize an experiment
-    # visualize('', 29, 'res/til_classification/nusacrowd/29 - bert_frozen_a-gem_.txt/bert_frozen_a-gem_.txt', 'nusacrowd_all_random', 'nusacrowd')
+    for index, row in list_exp.iterrows():
+        if row['exp_id'] >=70:
+            visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    # for metrics in ['avg_acc', 'avg_f1_macro', 'avg_lss']:
-    #     merge_viz('', [22, 48, 49], ['bert'], 'one', 'nusacrowd all random', metrics)
+    # run_create_viz('bert_frozen', 'ewc', 'nusacrowd all random')
     
-    # recalculate experiment
+    # recalculate an experiment
     # calculate_metrics(16, 'bert_frozen', 'ncl')
     
-    list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
-        
-    for index, row in list_exp.iterrows():
-        calculate_metrics(int(row['exp_id']), row['backbone'], row['baseline'])
+    # recalculate all experiments        
+    # for index, row in list_exp.iterrows():
+    #     calculate_metrics(int(row['exp_id']), row['backbone'], row['baseline'])
