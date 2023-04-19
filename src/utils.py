@@ -553,7 +553,7 @@ def calculate(dataframe, type):
 
 def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename, list_exp_id):    
     for dataframe in list_dataframe:
-        plt.errorbar([i for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o')
+        plt.errorbar([(i+1) for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o-')
     
     plt.title(title.replace('_.txt', ''))
     plt.xlabel(xlabel)
@@ -575,7 +575,11 @@ def merge_viz(dir_name, list_exp_id, list_backbone, baseline, case_name, metrics
     df = pd.DataFrame(columns=list_exp_id[i])
 
     for exp_id in list_exp_id[i]:
-        df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(list_backbone[i], baseline, exp_id), metrics), sep="\s+", names=[exp_id])
+        if baseline == "mtl":
+            df_mtl = pd.read_csv(get_filename(dir_name, exp_id, get_output(list_backbone[i], baseline, exp_id), metrics.replace('avg_', '')), sep="\s+")
+            df[exp_id] = df_mtl.iloc[-1].to_list()
+        else:
+            df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(list_backbone[i], baseline, exp_id), metrics), sep="\s+", names=[exp_id])
         
     list_df.append(df)
 
@@ -651,7 +655,7 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    run_create_viz(['bert', 'bert_frozen'], 'one', 'nusacrowd all random')
+    run_create_viz(['bert_frozen', 'bert'], 'one', 'nusacrowd all random')
     
     # recalculate an experiment
     # calculate_metrics(16, 'bert_frozen', 'ncl')
