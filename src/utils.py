@@ -655,11 +655,11 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    run_create_viz(['bert_frozen', 'bert'], 'one', 'nusacrowd all random')
+    # run_create_viz(['bert_frozen', 'bert'], 'one', 'nusacrowd all random')
     
     # recalculate an experiment
     # calculate_metrics(16, 'bert_frozen', 'ncl')
     
     # recalculate all experiments        
-    # for index, row in list_exp.iterrows():
-    #     calculate_metrics(int(row['exp_id']), row['backbone'], row['baseline'])
+    for index, row in list_exp.iterrows():
+        calculate_metrics(int(row['exp_id']), row['backbone'], row['baseline'])
