@@ -30,3 +30,7 @@ exp_id,backbone,baseline
 72,bert_frozen,one
 95,bert_frozen,one
 96,bert_frozen,one
+97,bert_frozen,hat
+98,bert_frozen,hat
+99,bert_frozen,hat
+100,bert_frozen,kan

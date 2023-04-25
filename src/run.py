@@ -247,7 +247,7 @@ for t,ncla in taskcla:
     if args.unseen and args.eval_each_step: #we want to test every one for unseen
         test_set = args.ntasks
     else:
-        test_set = t+1
+        test_set = args.ntasks
         
     task_name = []
     for u in range(test_set):
