@@ -644,7 +644,9 @@ def calculate_metrics(data):
     result_df = result_df.sort_values(by='bwt', ascending=False)
     
     result_df_aggr = result_df.groupby(['backbone', 'baseline']).aggregate({'last_acc': 'mean', 'last_f1': 'mean', 'bwt': 'mean', 'fwt': 'mean'})
-    print(result_df_aggr.sort_values(by='bwt', ascending=False))
+    result_df_aggr = result_df_aggr.sort_values(by='bwt', ascending=False)
+    
+    print(result_df_aggr)
     
     # write result to csv file    
     with open('res/til_classification/result.csv', 'a', newline='') as fp:
