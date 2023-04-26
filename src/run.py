@@ -230,15 +230,15 @@ for t,ncla in taskcla:
 
 
 
-        if args.aux_net:
-            torch.save({
-                        'model_state_dict': appr.aux_model.state_dict(),
-                        }, args.aux_model_path)
-            if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.aux_model_path+'_mask_pre') # not in state_dict
-            if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.aux_model_path+'_mask_back')
-        else:
-            if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.model_path+'_mask_pre') # not in state_dict
-            if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.model_path+'_mask_back')
+#         if args.aux_net:
+#             torch.save({
+#                         'model_state_dict': appr.aux_model.state_dict(),
+#                         }, args.aux_model_path)
+#             if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.aux_model_path+'_mask_pre') # not in state_dict
+#             if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.aux_model_path+'_mask_back')
+#         else:
+#             if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.model_path+'_mask_pre') # not in state_dict
+#             if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.model_path+'_mask_back')
 
     # ----------------------------------------------------------------------
     # Start Testing.
@@ -247,7 +247,7 @@ for t,ncla in taskcla:
     if args.unseen and args.eval_each_step: #we want to test every one for unseen
         test_set = args.ntasks
     else:
-        test_set = t+1
+        test_set = args.ntasks
         
     task_name = []
     for u in range(test_set):
