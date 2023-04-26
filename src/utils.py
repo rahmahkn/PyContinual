@@ -611,30 +611,49 @@ def calculate_fwt(mat, b):
 
   return "{:.4f}".format(sigma / (n-1))
 
-def calculate_metrics(exp_id, backbone, baseline):
-    # load data from text
-    output = get_output(backbone, baseline, exp_id)
-    with open(f'{output}progressive.acc.{exp_id}') as fp:
-        mat_acc = [list(map(float, line.strip().split('\t'))) for line in fp]
-        
-    with open(f'{output}progressive.f1_macro.{exp_id}') as fp:
-        mat_f1_macro = [list(map(float, line.strip().split('\t'))) for line in fp]
-        
-    with open(f'{output}progressive.lss.{exp_id}') as fp:
-        mat_lss = [list(map(float, line.strip().split('\t'))) for line in fp]
-        
-    # b = [0.0903,0.0957,0.0843,0.0882,0.0910,0.0847,0.0998,0.0992,0.0906,0.0756,0.0743,0.0781,0.0839,0.0873,0.0778,0.0810,0.0780,0.0791,0.0884,0.0867]
+def calculate_metrics(data):
+    result = []
     
-    # calculate result    
-    result = [exp_id, backbone, baseline,
-              calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
-              calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
-              calculate_bwt(mat_acc), 99999] # 99999 is for FWT (masih belum bisa dihitung)
+    for index, row in data:
+        # load data from text
+        exp_id = row['exp_id']
+        baseline = row['baseline']
+        backbone = row['backbone']
+        
+        output = get_output(backbone, baseline, exp_id)
+        with open(f'{output}progressive.acc.{exp_id}') as fp:
+            mat_acc = [list(map(float, line.strip().split('\t'))) for line in fp]
+            
+        with open(f'{output}progressive.f1_macro.{exp_id}') as fp:
+            mat_f1_macro = [list(map(float, line.strip().split('\t'))) for line in fp]
+            
+        with open(f'{output}progressive.lss.{exp_id}') as fp:
+            mat_lss = [list(map(float, line.strip().split('\t'))) for line in fp]
+            
+        # b = [0.0903,0.0957,0.0843,0.0882,0.0910,0.0847,0.0998,0.0992,0.0906,0.0756,0.0743,0.0781,0.0839,0.0873,0.0778,0.0810,0.0780,0.0791,0.0884,0.0867]
+        
+        # calculate result    
+        result.append([exp_id, backbone, baseline,
+                calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
+                calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
+                calculate_bwt(mat_acc), 99999]) # 99999 is for FWT (masih belum bisa dihitung)
+    
+    # change result to dataframe to sort
+    result_df = pd.DataFrame(result, columns=['exp_id', 'backbone', 'baseline', 'avg_acc', 'avg_f1_macro', 'avg_lss', 'last_acc', 'last_f1', 'lss', 'bwt', 'fwt'])
+    result_df = result_df.astype(dtype= {'avg_acc': 'float64', 'avg_f1_macro': 'float64', 'avg_lss': 'float64', 'last_acc': 'float64', 'last_f1': 'float64', 'lss': 'float64', 'bwt': 'float64', 'fwt': 'float64'})
+    result_df = result_df.sort_values(by='bwt', ascending=False)
+    
+    result_df_aggr = result_df.groupby(['backbone', 'baseline']).aggregate({'last_acc': 'mean', 'last_f1': 'mean', 'bwt': 'mean', 'fwt': 'mean'})
+    result_df_aggr = result_df_aggr.sort_values(by='bwt', ascending=False)
+    
+    print(result_df_aggr)
     
     # write result to csv file    
     with open('res/til_classification/result.csv', 'a', newline='') as fp:
         csv_writer = csv.writer(fp, delimiter=',')
-        csv_writer.writerow(result)
+        
+        for row in result_df.values.tolist():
+            csv_writer.writerow(row)
 
 def run_create_viz(list_backbone, baseline, title):
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
@@ -661,5 +680,4 @@ if __name__ == "__main__":
     # calculate_metrics(16, 'bert_frozen', 'ncl')
     
     # recalculate all experiments        
-    for index, row in list_exp.iterrows():
-        calculate_metrics(int(row['exp_id']), row['backbone'], row['baseline'])
+    calculate_metrics(list_exp.iterrows())

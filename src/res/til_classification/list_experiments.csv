@@ -12,6 +12,9 @@ exp_id,backbone,baseline
 86,bert_frozen,ewc
 87,bert_frozen,ewc
 97,bert_frozen,hat
+98,bert_frozen,hat
+99,bert_frozen,hat
+100,bert_frozen,kan
 35,bert,mtl
 60,bert,mtl
 71,bert,mtl
