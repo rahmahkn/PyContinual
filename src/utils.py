@@ -621,6 +621,8 @@ def calculate_metrics(data):
         backbone = row['backbone']
         
         output = get_output(backbone, baseline, exp_id)
+        filename = f'res/til_classification/nusacrowd/{backbone}_{baseline}_.txtprogressive.b.{exp_id}'
+        
         with open(f'{output}progressive.acc.{exp_id}') as fp:
             mat_acc = [list(map(float, line.strip().split('\t'))) for line in fp]
             
@@ -630,10 +632,8 @@ def calculate_metrics(data):
         with open(f'{output}progressive.lss.{exp_id}') as fp:
             mat_lss = [list(map(float, line.strip().split('\t'))) for line in fp]
             
-        with open(f'{output}progressive.b.{exp_id}') as fp:
+        with open(filename) as fp:
             vec_b = [list(map(float, line.strip().split('\t'))) for line in fp][0]
-            
-        print(vec_b)
         
         # calculate result    
         result.append([exp_id, backbone, baseline,
