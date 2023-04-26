@@ -630,13 +630,16 @@ def calculate_metrics(data):
         with open(f'{output}progressive.lss.{exp_id}') as fp:
             mat_lss = [list(map(float, line.strip().split('\t'))) for line in fp]
             
-        # b = [0.0903,0.0957,0.0843,0.0882,0.0910,0.0847,0.0998,0.0992,0.0906,0.0756,0.0743,0.0781,0.0839,0.0873,0.0778,0.0810,0.0780,0.0791,0.0884,0.0867]
+        with open(f'{output}progressive.b.{exp_id}') as fp:
+            vec_b = [list(map(float, line.strip().split('\t'))) for line in fp][0]
+            
+        print(vec_b)
         
         # calculate result    
         result.append([exp_id, backbone, baseline,
                 calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
                 calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
-                calculate_bwt(mat_acc), 99999]) # 99999 is for FWT (masih belum bisa dihitung)
+                calculate_bwt(mat_acc), calculate_fwt(mat_acc, vec_b)])
     
     # change result to dataframe to sort
     result_df = pd.DataFrame(result, columns=['exp_id', 'backbone', 'baseline', 'avg_acc', 'avg_f1_macro', 'avg_lss', 'last_acc', 'last_f1', 'lss', 'bwt', 'fwt'])
@@ -677,7 +680,7 @@ if __name__ == "__main__":
     # run_create_viz(['bert_frozen', 'bert'], 'one', 'nusacrowd all random')
     
     # recalculate an experiment
-    # calculate_metrics(16, 'bert_frozen', 'ncl')
+    # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
     calculate_metrics(list_exp.iterrows())
