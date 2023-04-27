@@ -600,6 +600,9 @@ def merge_viz(dir_name, list_exp_id, list_backbone, baseline, case_name, metrics
         if baseline == "mtl":
             df_mtl = pd.read_csv(get_filename(dir_name, exp_id, get_output(list_backbone[i], baseline, exp_id), metrics.replace('avg_', '')), sep="\s+")
             df[exp_id] = df_mtl.iloc[-1].to_list()
+        elif baseline == "one":
+            df_one = pd.read_csv(get_filename(dir_name, exp_id, get_output(list_backbone[i], baseline, exp_id), metrics), sep="\s+", names=[i for i in range(17)])
+            df[exp_id] = df_one.iloc[0].values.tolist()
         else:
             df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(list_backbone[i], baseline, exp_id), metrics), sep="\s+", names=[exp_id])
         
