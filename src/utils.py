@@ -694,12 +694,12 @@ if __name__ == "__main__":
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
     
     # visualize an experiment
-    for index, row in list_exp.iterrows():
-        if row['baseline'] == 'one':
-            visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
+    # for index, row in list_exp.iterrows():
+    #     if row['baseline'] == 'one':
+    #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    # run_create_viz(['bert_frozen'], 'kan', 'nusacrowd all random')
+    run_create_viz(['bert_frozen', 'bert'], 'one', 'nusacrowd all random')
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
