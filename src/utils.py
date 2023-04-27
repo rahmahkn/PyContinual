@@ -514,8 +514,27 @@ def visualize(dir_name, exp_id, output, case_name, task):
                 df.transpose().plot()
         except:
             print("File not found")
+            
+      elif 'one' in output: # if model is ONE, take the diagonal value
+        try:
+            n = len(tasks_df['Task'])
+            
+            base_metrics = metrics.replace('avg_', '')
+            df = pd.read_csv(get_filename(dir_name, exp_id, output, base_metrics), sep="\s+", names=[i for i in range (n)])
+            
+            for i in df.index:
+                df.at[n-1, i] = df.at[i, i]
+            
+            df = df.drop(range(16))
+            
+            if 'avg' in metrics:
+                np.savetxt(output + f'progressive.{metrics}.' + str(exp_id), df,'%.4f',delimiter='\t')
+            
+            df.transpose().plot()
+        except:
+            print("File not found")
       
-      else: # if model is not MTL, show all line
+      else: # if model is not MTL/ONE, show all line
         try:
             if 'avg' in metrics:
                 base_metrics = metrics.replace('avg_', '')
@@ -675,12 +694,12 @@ if __name__ == "__main__":
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
     
     # visualize an experiment
-    # for index, row in list_exp.iterrows():
-    #     if row['exp_id'] >=70:
-    #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
+    for index, row in list_exp.iterrows():
+        if row['baseline'] == 'one':
+            visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    run_create_viz(['bert_frozen'], 'kan', 'nusacrowd all random')
+    # run_create_viz(['bert_frozen'], 'kan', 'nusacrowd all random')
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
