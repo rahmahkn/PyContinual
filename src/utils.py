@@ -506,12 +506,11 @@ def visualize(dir_name, exp_id, output, case_name, task):
   for metrics in list_metrics:
       if 'mtl' in output: # if model is MTL, only show last line
         try:
-            if 'avg' in metrics:
-                pass 
-            else:
-                df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
-                df = df.drop(range(16))
-                df.transpose().plot()
+            # if 'avg' in metrics:
+            #     # base_metrics = metrics.replace('avg_', '')
+            df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics.replace('avg_', '')), sep="\s+", names=[i for i in range (len(tasks_df['Task']))])
+            df = df.drop(range(16))
+            df.transpose().plot()
         except:
             print("File not found")
             
@@ -588,8 +587,9 @@ def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename, list_exp
     plt.savefig(filename, bbox_inches='tight')
     plt.close()
         
-def merge_viz(dir_name, list_exp_id, list_backbone, baseline, case_name, metrics): # perlu dimodif
+def merge_viz(dir_name, list_exp_id, list_backbone, list_baseline, case_name, metrics, typ): # perlu dimodif
   list_df = []
+  
   for i in range (len(list_exp_id)):
     n = len(list_exp_id[i])
 
@@ -597,18 +597,30 @@ def merge_viz(dir_name, list_exp_id, list_backbone, baseline, case_name, metrics
     df = pd.DataFrame(columns=list_exp_id[i])
 
     for exp_id in list_exp_id[i]:
+        if typ == 'multi_backbone':
+            baseline = list_baseline[0]
+            backbone = list_backbone[i]
+            output = get_output(backbone, baseline, exp_id)
+        else: # type == 'multi_baseline'
+            baseline = list_baseline[i]
+            backbone = list_backbone[0]
+            output = get_output(backbone, baseline, exp_id)
+    
         if baseline == "mtl":
-            df_mtl = pd.read_csv(get_filename(dir_name, exp_id, get_output(list_backbone[i], baseline, exp_id), metrics.replace('avg_', '')), sep="\s+")
+            df_mtl = pd.read_csv(get_filename(dir_name, exp_id, output, metrics.replace('avg_', '')), sep="\s+")
             df[exp_id] = df_mtl.iloc[-1].to_list()
         elif baseline == "one":
-            df_one = pd.read_csv(get_filename(dir_name, exp_id, get_output(list_backbone[i], baseline, exp_id), metrics), sep="\s+", names=[i for i in range(17)])
+            df_one = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range(17)])
             df[exp_id] = df_one.iloc[0].values.tolist()
         else:
-            df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, get_output(list_backbone[i], baseline, exp_id), metrics), sep="\s+", names=[exp_id])
+            df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[exp_id])
         
     list_df.append(df)
 
-  create_viz(list_df, f'{baseline} - {case_name}', list_backbone, 'number of tasks', metrics, f"viz/{baseline}/{baseline}_{metrics}.png", list_exp_id)
+  if typ == 'multi_backbone':
+      create_viz(list_df, f'{baseline} - {case_name}', list_backbone, 'number of tasks', metrics, f"viz/{baseline}/{baseline}_{metrics}.png", list_exp_id)
+  else: # type == 'multi_baseline'
+      create_viz(list_df, f'{backbone} - {case_name}', list_baseline, 'number of tasks', metrics, f"viz/{backbone}/{backbone}_{metrics}.png", list_exp_id)
 
 def calculate_avg_metrics(mat):
   avg_per_iter = []
@@ -683,26 +695,31 @@ def calculate_metrics(data):
         for row in result_df.values.tolist():
             csv_writer.writerow(row)
 
-def run_create_viz(list_backbone, baseline, title):
+def run_create_viz(list_backbone, list_baseline, title, typ):
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
     
     list_exp_id = []
-    for backbone in list_backbone:
-        list_exp_id.append(list_exp[(list_exp['backbone'] == backbone) & (list_exp['baseline'] == baseline)]['exp_id'].to_list())
+    
+    if typ == 'multi_backbone':
+        for backbone in list_backbone:
+            list_exp_id.append(list_exp[(list_exp['backbone'] == backbone) & (list_exp['baseline'] == list_baseline[0])]['exp_id'].to_list())
+    else:
+        for baseline in list_baseline:
+            list_exp_id.append(list_exp[(list_exp['backbone'] == list_backbone[0]) & (list_exp['baseline'] == baseline)]['exp_id'].to_list())
     
     for metrics in ['avg_acc', 'avg_f1_macro', 'avg_lss']:
-        merge_viz('', list_exp_id, list_backbone, baseline, title, metrics)
+        merge_viz('', list_exp_id, list_backbone, list_baseline, title, metrics, typ)
             
 if __name__ == "__main__":
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
     
     # visualize an experiment
     # for index, row in list_exp.iterrows():
-    #     if row['baseline'] == 'one':
+    #     if row['baseline'] == 'mtl':
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    run_create_viz(['bert_frozen', 'bert'], 'one', 'nusacrowd all random')
+    run_create_viz(['bert'], ['mtl', 'one', 'ncl'], 'nusacrowd all random', 'multi_baseline')
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
