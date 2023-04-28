@@ -451,6 +451,7 @@ def is_number(s):
         pass
 
     return False
+
 ########################################################################################################################
 
 # define metrics
@@ -495,6 +496,99 @@ def get_filename(dir_name, exp_id, output, metrics):
 
 def get_output(backbone, baseline, exp_id):
     return f"res/til_classification/nusacrowd/{exp_id} - {backbone}_{baseline}_.txt/{backbone}_{baseline}_.txt"
+
+def get_one_result(mat):
+    return [mat[i][i] for i in range (len(mat))]
+    
+def calculate(dataframe, type):
+  if type == "avg":
+    mean = dataframe.mean(axis=1)
+    return [mean[i] for i in range(len(dataframe))]
+
+  elif type == "std":
+    std = dataframe.std(axis=1)
+    return [std[i] for i in range(len(dataframe))]
+
+def calculate_avg_metrics(mat):
+  avg_per_iter = []
+
+  for row in mat:
+    avg_per_iter += [np.average(row)]
+
+  return "{:.4f}".format(np.average(avg_per_iter))
+
+def calculate_bwt(mat):
+  sigma = 0
+  n = len(mat) # number of tasks
+
+  for i in range(0, n-1):
+    sigma += (mat[n-1][i] - mat[i][i])
+
+  return "{:.4f}".format(sigma / (n-1))
+
+def calculate_fwt(mat, b):
+  sigma = 0
+  n = len(mat) # number of tasks
+
+  for i in range(1, n):
+    sigma += (mat[i-1][i] - b[i])
+
+  return "{:.4f}".format(sigma / (n-1))
+
+def calculate_metrics(data):
+    result = []
+    
+    for index, row in data:
+        # load data from text
+        exp_id = row['exp_id']
+        baseline = row['baseline']
+        backbone = row['backbone']
+        
+        output = get_output(backbone, baseline, exp_id)
+        filename = f'res/til_classification/nusacrowd/{backbone}_{baseline}_.txtprogressive.b.{exp_id}'
+        
+        with open(f'{output}progressive.acc.{exp_id}') as fp:
+            mat_acc = [list(map(float, line.strip().split('\t'))) for line in fp]
+            
+        with open(f'{output}progressive.f1_macro.{exp_id}') as fp:
+            mat_f1_macro = [list(map(float, line.strip().split('\t'))) for line in fp]
+            
+        with open(f'{output}progressive.lss.{exp_id}') as fp:
+            mat_lss = [list(map(float, line.strip().split('\t'))) for line in fp]
+            
+        with open(filename) as fp:
+            vec_b = [list(map(float, line.strip().split('\t'))) for line in fp][0]
+        
+        # calculate result    
+        if baseline == 'one':
+            result.append([exp_id, backbone, baseline,
+                calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
+                calculate_avg_metrics([get_one_result(mat_acc)]), calculate_avg_metrics([get_one_result(mat_f1_macro)]), calculate_avg_metrics([get_one_result(mat_lss)]),
+                0, 0])
+        else:
+            result.append([exp_id, backbone, baseline,
+                calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
+                calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
+                calculate_bwt(mat_acc), calculate_fwt(mat_acc, vec_b)])
+    
+    # change result to dataframe to sort
+    result_df = pd.DataFrame(result, columns=['exp_id', 'backbone', 'baseline', 'avg_acc', 'avg_f1_macro', 'avg_lss', 'last_acc', 'last_f1', 'lss', 'bwt', 'fwt'])
+    result_df = result_df.astype(dtype= {'avg_acc': 'float64', 'avg_f1_macro': 'float64', 'avg_lss': 'float64', 'last_acc': 'float64', 'last_f1': 'float64', 'lss': 'float64', 'bwt': 'float64', 'fwt': 'float64'})
+    result_df = result_df.sort_values(by='last_acc', ascending=False)
+    
+    result_df_aggr = result_df.groupby(['backbone', 'baseline']).aggregate({'last_acc': 'mean', 'last_f1': 'mean', 'bwt': 'mean', 'fwt': 'mean'})
+    result_df_aggr = result_df_aggr.sort_values(by='last_acc', ascending=False)
+    
+    print(result_df_aggr)
+    
+    # write result to csv file    
+    with open('res/til_classification/result.csv', 'a', newline='') as fp:
+        csv_writer = csv.writer(fp, delimiter=',')
+        
+        for row in result_df.values.tolist():
+            csv_writer.writerow(row)
+
+########################################################################################################################
 
 def visualize(dir_name, exp_id, output, case_name, task):
   tasks_df = pd.read_csv(get_filename(dir_name, exp_id, output, "tasks"), sep="\s+", names=['Task'])
@@ -559,15 +653,6 @@ def visualize(dir_name, exp_id, output, case_name, task):
         plt.ylim(0, 1)
       
       plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
-      
-def calculate(dataframe, type):
-  if type == "avg":
-    mean = dataframe.mean(axis=1)
-    return [mean[i] for i in range(len(dataframe))]
-
-  elif type == "std":
-    std = dataframe.std(axis=1)
-    return [std[i] for i in range(len(dataframe))]
 
 def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename, list_exp_id):    
     for dataframe in list_dataframe:
@@ -622,79 +707,6 @@ def merge_viz(dir_name, list_exp_id, list_backbone, list_baseline, case_name, me
   else: # type == 'multi_baseline'
       create_viz(list_df, f'{backbone} - {case_name}', list_baseline, 'number of tasks', metrics, f"viz/{backbone}/{backbone}_{metrics}.png", list_exp_id)
 
-def calculate_avg_metrics(mat):
-  avg_per_iter = []
-
-  for row in mat:
-    avg_per_iter += [np.average(row)]
-
-  return "{:.4f}".format(np.average(avg_per_iter))
-
-def calculate_bwt(mat):
-  sigma = 0
-  n = len(mat) # number of tasks
-
-  for i in range(0, n-1):
-    sigma += (mat[n-1][i] - mat[i][i])
-
-  return "{:.4f}".format(sigma / (n-1))
-
-def calculate_fwt(mat, b):
-  sigma = 0
-  n = len(mat) # number of tasks
-
-  for i in range(1, n):
-    sigma += (mat[i-1][i] - b[i])
-
-  return "{:.4f}".format(sigma / (n-1))
-
-def calculate_metrics(data):
-    result = []
-    
-    for index, row in data:
-        # load data from text
-        exp_id = row['exp_id']
-        baseline = row['baseline']
-        backbone = row['backbone']
-        
-        output = get_output(backbone, baseline, exp_id)
-        filename = f'res/til_classification/nusacrowd/{backbone}_{baseline}_.txtprogressive.b.{exp_id}'
-        
-        with open(f'{output}progressive.acc.{exp_id}') as fp:
-            mat_acc = [list(map(float, line.strip().split('\t'))) for line in fp]
-            
-        with open(f'{output}progressive.f1_macro.{exp_id}') as fp:
-            mat_f1_macro = [list(map(float, line.strip().split('\t'))) for line in fp]
-            
-        with open(f'{output}progressive.lss.{exp_id}') as fp:
-            mat_lss = [list(map(float, line.strip().split('\t'))) for line in fp]
-            
-        with open(filename) as fp:
-            vec_b = [list(map(float, line.strip().split('\t'))) for line in fp][0]
-        
-        # calculate result    
-        result.append([exp_id, backbone, baseline,
-                calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
-                calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
-                calculate_bwt(mat_acc), calculate_fwt(mat_acc, vec_b)])
-    
-    # change result to dataframe to sort
-    result_df = pd.DataFrame(result, columns=['exp_id', 'backbone', 'baseline', 'avg_acc', 'avg_f1_macro', 'avg_lss', 'last_acc', 'last_f1', 'lss', 'bwt', 'fwt'])
-    result_df = result_df.astype(dtype= {'avg_acc': 'float64', 'avg_f1_macro': 'float64', 'avg_lss': 'float64', 'last_acc': 'float64', 'last_f1': 'float64', 'lss': 'float64', 'bwt': 'float64', 'fwt': 'float64'})
-    result_df = result_df.sort_values(by='bwt', ascending=False)
-    
-    result_df_aggr = result_df.groupby(['backbone', 'baseline']).aggregate({'last_acc': 'mean', 'last_f1': 'mean', 'bwt': 'mean', 'fwt': 'mean'})
-    result_df_aggr = result_df_aggr.sort_values(by='bwt', ascending=False)
-    
-    print(result_df_aggr)
-    
-    # write result to csv file    
-    with open('res/til_classification/result.csv', 'a', newline='') as fp:
-        csv_writer = csv.writer(fp, delimiter=',')
-        
-        for row in result_df.values.tolist():
-            csv_writer.writerow(row)
-
 def run_create_viz(list_backbone, list_baseline, title, typ):
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
     
@@ -709,6 +721,8 @@ def run_create_viz(list_backbone, list_baseline, title, typ):
     
     for metrics in ['avg_acc', 'avg_f1_macro', 'avg_lss']:
         merge_viz('', list_exp_id, list_backbone, list_baseline, title, metrics, typ)
+
+########################################################################################################################
             
 if __name__ == "__main__":
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
@@ -719,10 +733,10 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    run_create_viz(['bert'], ['mtl', 'one', 'ncl'], 'nusacrowd all random', 'multi_baseline')
+    # run_create_viz(['bert'], ['mtl', 'one', 'ncl'], 'nusacrowd all random', 'multi_baseline')
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
-    # calculate_metrics(list_exp.iterrows())
+    calculate_metrics(list_exp.iterrows())
