@@ -484,7 +484,7 @@ def get_average(matrix):
 
     result = []
     for i in range (n_tasks):
-        result += [sum(mat[i])/n_tasks]
+        result += [sum(mat[i][0:i+1]) / (i+1)]
 
     return result
 
@@ -667,6 +667,7 @@ def visualize(dir_name, exp_id, output, case_name, task):
       plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
 
 def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename, list_exp_id):    
+    print(list_exp_id)
     for dataframe in list_dataframe:
         if 'mtl' in filename or 'one' in filename:
             plt.errorbar([(i+1) for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o')
@@ -740,15 +741,15 @@ if __name__ == "__main__":
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
     
     # visualize an experiment
-    # for index, row in list_exp.iterrows():
-    #     if row['baseline'] == 'mtl':
-    #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
+    for index, row in list_exp.iterrows():
+        if (row['baseline'] != 'one') or (row['baseline'] != 'mtl'):
+            visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    # run_create_viz(['bert'], ['mtl', 'one', 'ncl'], 'nusacrowd all random', 'multi_baseline')
+    # run_create_viz(['bert_adapter', 'bert_frozen'], ['a-gem'], 'nusacrowd all random', 'multi_backbone')
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
-    calculate_metrics(list_exp.iterrows())
+    # calculate_metrics(list_exp.iterrows())
