@@ -562,9 +562,14 @@ def calculate_metrics(data):
         # calculate result    
         if baseline == 'one':
             result.append([exp_id, backbone, baseline,
-                calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
+                calculate_avg_metrics([get_one_result(mat_acc)]), calculate_avg_metrics([get_one_result(mat_f1_macro)]), calculate_avg_metrics([get_one_result(mat_lss)]),
                 calculate_avg_metrics([get_one_result(mat_acc)]), calculate_avg_metrics([get_one_result(mat_f1_macro)]), calculate_avg_metrics([get_one_result(mat_lss)]),
                 0, 0])
+        elif baseline == 'mtl':
+            result.append([exp_id, backbone, baseline,
+                calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
+                calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
+                calculate_bwt(mat_acc), calculate_fwt(mat_acc, vec_b)])
         else:
             result.append([exp_id, backbone, baseline,
                 calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
@@ -587,6 +592,13 @@ def calculate_metrics(data):
         
         for row in result_df.values.tolist():
             csv_writer.writerow(row)
+            
+    with open('res/til_classification/result_per_setting.csv', 'a', newline='') as fp:
+        csv_writer = csv.writer(fp, delimiter=',')
+        
+        list_row = result_df_aggr.values.tolist()
+        for i in range (len(list_row)):
+            csv_writer.writerow([result_df_aggr.index.get_level_values(0).to_list()[i]] + [result_df_aggr.index.get_level_values(1).to_list()[i]] + list_row[i])
 
 ########################################################################################################################
 
