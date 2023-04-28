@@ -745,10 +745,10 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    run_create_viz(['bert_adapter'], ['a-gem', 'ewc', 'mtl'], 'nusacrowd all random', 'multi_baseline')
+    # run_create_viz(['bert_adapter'], ['a-gem', 'ewc', 'mtl'], 'nusacrowd all random', 'multi_baseline')
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
-    # calculate_metrics(list_exp.iterrows())
+    calculate_metrics(list_exp.iterrows())
