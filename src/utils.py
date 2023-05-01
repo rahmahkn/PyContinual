@@ -582,8 +582,6 @@ def calculate_metrics(data):
     result_df = result_df.sort_values(by='last_acc', ascending=False)
     
     result_df_aggr = result_df.groupby(['backbone', 'baseline']).aggregate({'last_acc': 'mean', 'last_f1': 'mean', 'bwt': 'mean', 'fwt': 'mean'})
-    # for col_name in ['last_acc', 'last_f1', 'bwt', 'fwt']:
-    #     result_df_aggr[col_name].map('${:,.4f}'.format)
     result_df_aggr = result_df_aggr.sort_values(by='last_acc', ascending=False)
     
     print(result_df_aggr)
@@ -743,14 +741,31 @@ if __name__ == "__main__":
     
     # visualize an experiment
     # for index, row in list_exp.iterrows():
-    #     if (row['baseline'] != 'one') or (row['baseline'] != 'mtl'):
+    #     if (row['baseline'] == 'hat') and (row['backbone'] == 'bert_adapter'):
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    # run_create_viz(['bert_adapter'], ['a-gem', 'ewc', 'mtl'], 'nusacrowd all random', 'multi_baseline')
+    list_create_viz = [
+        # multi_baseline
+        [['bert'], ['mtl', 'ncl', 'one'], 'multi_baseline'],
+        [['bert_adapter'], ['a-gem', 'ewc', 'hat', 'mtl'], 'multi_baseline'],
+        [['bert_frozen'], ['a-gem', 'ewc', 'hat', 'kan', 'ncl', 'one'], 'multi_baseline'],
+        
+        # multi_backbone
+        [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
+        [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
+        [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
+        [['bert_frozen'], ['kan'], 'multi_backbone'],
+        [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
+        [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+        [['bert', 'bert_frozen'], ['one'], 'multi_backbone'],
+    ]
+    
+    for elmt in list_create_viz:
+        run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
-    calculate_metrics(list_exp.iterrows())
+    # calculate_metrics(list_exp.iterrows())
