@@ -569,7 +569,7 @@ def calculate_metrics(data):
             result.append([exp_id, backbone, baseline,
                 calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
                 calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
-                calculate_bwt(mat_acc), calculate_fwt(mat_acc, vec_b)])
+                0, 0])
         else:
             result.append([exp_id, backbone, baseline,
                 calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
@@ -582,6 +582,8 @@ def calculate_metrics(data):
     result_df = result_df.sort_values(by='last_acc', ascending=False)
     
     result_df_aggr = result_df.groupby(['backbone', 'baseline']).aggregate({'last_acc': 'mean', 'last_f1': 'mean', 'bwt': 'mean', 'fwt': 'mean'})
+    # for col_name in ['last_acc', 'last_f1', 'bwt', 'fwt']:
+    #     result_df_aggr[col_name].map('${:,.4f}'.format)
     result_df_aggr = result_df_aggr.sort_values(by='last_acc', ascending=False)
     
     print(result_df_aggr)
@@ -598,7 +600,7 @@ def calculate_metrics(data):
         
         list_row = result_df_aggr.values.tolist()
         for i in range (len(list_row)):
-            csv_writer.writerow([result_df_aggr.index.get_level_values(0).to_list()[i]] + [result_df_aggr.index.get_level_values(1).to_list()[i]] + list_row[i])
+            csv_writer.writerow([result_df_aggr.index.get_level_values(0).to_list()[i]] + [result_df_aggr.index.get_level_values(1).to_list()[i]] + ['{:,.4f}'.format(elmt) for elmt in list_row[i]])
 
 ########################################################################################################################
 
