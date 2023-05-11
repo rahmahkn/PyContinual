@@ -796,10 +796,10 @@ if __name__ == "__main__":
     # calculate_metrics(list_exp.iterrows())
     
     # get worst forgetting
-    with open('res/til_classification/result_forgetting.csv', 'a', newline='') as fp:
+    with open('res/til_classification/result_forgetting_cl.csv', 'a', newline='') as fp:
         for index, elmt in list_exp.iterrows():
             csv_writer = csv.writer(fp, delimiter=',')
             
             result = get_worst_forgetting('', elmt['exp_id'], elmt['backbone'], elmt['baseline'], list_task[elmt['id_random']])
-            csv_writer.writerow([elmt['exp_id'], result['delta'], result['name_task_effected'], result['name_task_effecting']])
+            csv_writer.writerow([elmt['exp_id'], elmt['backbone'], elmt['baseline'], result['delta'], result['name_task_effected'], result['name_task_effecting'], result['id_task_effected'], result['id_task_effecting']])
             
