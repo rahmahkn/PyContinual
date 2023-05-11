@@ -593,12 +593,34 @@ def calculate_metrics(data):
         for row in result_df.values.tolist():
             csv_writer.writerow(row)
             
-    with open('res/til_classification/result_per_setting.csv', 'a', newline='') as fp:
-        csv_writer = csv.writer(fp, delimiter=',')
+    # with open('res/til_classification/result_per_setting.csv', 'a', newline='') as fp:
+    #     csv_writer = csv.writer(fp, delimiter=',')
         
-        list_row = result_df_aggr.values.tolist()
-        for i in range (len(list_row)):
-            csv_writer.writerow([result_df_aggr.index.get_level_values(0).to_list()[i]] + [result_df_aggr.index.get_level_values(1).to_list()[i]] + ['{:,.4f}'.format(elmt) for elmt in list_row[i]])
+    #     list_row = result_df_aggr.values.tolist()
+    #     for i in range (len(list_row)):
+    #         csv_writer.writerow([result_df_aggr.index.get_level_values(0).to_list()[i]] + [result_df_aggr.index.get_level_values(1).to_list()[i]] + ['{:,.4f}'.format(elmt) for elmt in list_row[i]])
+
+def get_worst_forgetting(dir_name, exp_id, backbone, baseline, list_task): # n: jumlah data worst yang dipakai
+    output = get_output(backbone, baseline, exp_id)
+    df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics="f1_macro"), sep="\s+", names=[i for i in range (17)])
+    mat = df.values.tolist()
+    
+    n_task = len(mat)
+    worst = {'delta': 0, 'id_task_effected': 0, 'id_task_effecting': 0}
+    
+    for i in range (n_task-1):
+        for j in range (0, i+1):
+            if mat[i+1][j]-mat[i][j] < worst['delta']:
+                worst['delta'] = mat[i+1][j]-mat[i][j]
+                worst['id_task_effected'] = j
+                worst['id_task_effecting'] = i+1
+
+    # print(worst['id_task_effected'])
+    worst['delta'] = "%.4f" % worst['delta']
+    worst['name_task_effected'] = list_task[worst['id_task_effected']]
+    worst['name_task_effecting'] = list_task[worst['id_task_effecting']]
+                
+    return worst
 
 ########################################################################################################################
 
@@ -739,33 +761,45 @@ def run_create_viz(list_backbone, list_baseline, title, typ):
 if __name__ == "__main__":
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
     
+    with open('nusacrowd_all_random', 'r') as f:
+        list_task = [[task.strip() for task in line.split(' ')] for line in f]
+    
     # visualize an experiment
     # for index, row in list_exp.iterrows():
     #     if (row['baseline'] == 'hat') and (row['backbone'] == 'bert_adapter'):
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    list_create_viz = [
-        # multi_baseline
-        [['bert'], ['mtl', 'ncl', 'one'], 'multi_baseline'],
-        [['bert_adapter'], ['a-gem', 'ewc', 'hat', 'mtl'], 'multi_baseline'],
-        [['bert_frozen'], ['a-gem', 'ewc', 'hat', 'kan', 'ncl', 'one'], 'multi_baseline'],
+    # list_create_viz = [
+    #     # multi_baseline
+    #     [['bert'], ['mtl', 'ncl', 'one'], 'multi_baseline'],
+    #     [['bert_adapter'], ['a-gem', 'ewc', 'hat', 'mtl'], 'multi_baseline'],
+    #     [['bert_frozen'], ['a-gem', 'ewc', 'hat', 'kan', 'ncl', 'one'], 'multi_baseline'],
         
-        # multi_backbone
-        [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
-        [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
-        [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
-        [['bert_frozen'], ['kan'], 'multi_backbone'],
-        [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['one'], 'multi_backbone'],
-    ]
+    #     # multi_backbone
+    #     [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
+    #     [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
+    #     [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
+    #     [['bert_frozen'], ['kan'], 'multi_backbone'],
+    #     [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone'],
+    # ]
     
-    for elmt in list_create_viz:
-        run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
+    # for elmt in list_create_viz:
+    #     run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
     # calculate_metrics(list_exp.iterrows())
+    
+    # get worst forgetting
+    with open('res/til_classification/result_forgetting.csv', 'a', newline='') as fp:
+        for index, elmt in list_exp.iterrows():
+            csv_writer = csv.writer(fp, delimiter=',')
+            
+            result = get_worst_forgetting('', elmt['exp_id'], elmt['backbone'], elmt['baseline'], list_task[elmt['id_random']])
+            csv_writer.writerow([elmt['exp_id'], result['delta'], result['name_task_effected'], result['name_task_effecting']])
+            
