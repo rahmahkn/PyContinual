@@ -622,6 +622,28 @@ def get_worst_forgetting(dir_name, exp_id, backbone, baseline, list_task): # n: 
                 
     return worst
 
+def get_best_transfer(dir_name, exp_id, backbone, baseline, list_task): # n: jumlah data worst yang dipakai
+    output = get_output(backbone, baseline, exp_id)
+    df = pd.read_csv(get_filename(dir_name, exp_id, output, metrics="f1_macro"), sep="\s+", names=[i for i in range (17)])
+    mat = df.values.tolist()
+    
+    n_task = len(mat)
+    worst = {'delta': 0, 'id_task_effected': 0, 'id_task_effecting': 0}
+    
+    for i in range (n_task-1):
+        for j in range (0, i+1):
+            if mat[i+1][j]-mat[i][j] > worst['delta']:
+                worst['delta'] = mat[i+1][j]-mat[i][j]
+                worst['id_task_effected'] = j
+                worst['id_task_effecting'] = i+1
+
+    # print(worst['id_task_effected'])
+    worst['delta'] = "%.4f" % worst['delta']
+    worst['name_task_effected'] = list_task[worst['id_task_effected']]
+    worst['name_task_effecting'] = list_task[worst['id_task_effecting']]
+                
+    return worst
+
 ########################################################################################################################
 
 def visualize(dir_name, exp_id, output, case_name, task):
@@ -796,10 +818,10 @@ if __name__ == "__main__":
     # calculate_metrics(list_exp.iterrows())
     
     # get worst forgetting
-    with open('res/til_classification/result_forgetting_cl.csv', 'a', newline='') as fp:
+    with open('res/til_classification/result_transfer_cl.csv', 'a', newline='') as fp:
         for index, elmt in list_exp.iterrows():
             csv_writer = csv.writer(fp, delimiter=',')
             
-            result = get_worst_forgetting('', elmt['exp_id'], elmt['backbone'], elmt['baseline'], list_task[elmt['id_random']])
+            result = get_best_transfer('', elmt['exp_id'], elmt['backbone'], elmt['baseline'], list_task[elmt['id_random']])
             csv_writer.writerow([elmt['exp_id'], elmt['backbone'], elmt['baseline'], result['delta'], result['name_task_effected'], result['name_task_effecting'], result['id_task_effected'], result['id_task_effecting']])
             
