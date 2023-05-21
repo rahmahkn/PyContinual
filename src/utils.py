@@ -711,16 +711,33 @@ def visualize(dir_name, exp_id, output, case_name, task):
       plt.savefig(f"{output}_{metrics}_{exp_id}.png", bbox_inches='tight')
 
 def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename, list_exp_id):    
-    for dataframe in list_dataframe:
-        if 'mtl' in filename or 'one' in filename:
-            plt.errorbar([(i+1) for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o')
-        else:
-            plt.errorbar([(i+1) for i in range(len(dataframe))], calculate(dataframe, "avg"), calculate(dataframe, "std"), fmt ='o-')
+    color_const = {
+        'a-gem': ['c-', 'c'],
+        'ewc': ['m-', 'm'],
+        'hat': ['y-', 'y'],
+        'kan': ['g-', 'g'],
+        'ncl': ['r-', 'r'],
+        'one': ['b--', 'b'],
+        'mtl': ['k--', 'k'],
+        
+        'bert': ['c-', 'c'],
+        'bert_frozen': ['m-', 'm'],
+        'bert_adapter': ['y-', 'y']
+    }
+    
+    
+    for i in range (len(list_dataframe)):
+            x_indices = [(i+1) for i in range(len(list_dataframe[i]))]
+            avg = calculate(list_dataframe[i], "avg")
+            std = calculate(list_dataframe[i], "std")
+            
+            plt.plot(x_indices, avg, color_const[legend[i]][0], label=legend[i])
+            plt.fill_between(x_indices, [(avg[i]-std[i]) for i in range (len(avg))], [(avg[i]+std[i]) for i in range (len(avg))], color= color_const[legend[i]][1], alpha=0.2)
     
     plt.title(title.replace('_.txt', ''))
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
-    plt.legend(legend)
+    plt.legend()
 
     if 'lss' not in filename:
         plt.ylim(0, 1)
@@ -728,7 +745,7 @@ def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename, list_exp
     plt.savefig(filename, bbox_inches='tight')
     plt.close()
         
-def merge_viz(dir_name, list_exp_id, list_backbone, list_baseline, case_name, metrics, typ): # perlu dimodif
+def merge_viz(dir_name, list_exp_id, list_backbone, list_baseline, case_name, metrics, typ):
   list_df = []
   
   for i in range (len(list_exp_id)):
@@ -792,24 +809,24 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    # list_create_viz = [
-    #     # multi_baseline
-    #     [['bert'], ['mtl', 'ncl', 'one'], 'multi_baseline'],
-    #     [['bert_adapter'], ['a-gem', 'ewc', 'hat', 'mtl'], 'multi_baseline'],
-    #     [['bert_frozen'], ['a-gem', 'ewc', 'hat', 'kan', 'ncl', 'one'], 'multi_baseline'],
+    list_create_viz = [
+        # multi_baseline
+        [['bert'], ['mtl', 'one', 'ncl'], 'multi_baseline'],
+        [['bert_adapter'], ['mtl', 'hat', 'a-gem', 'ewc'], 'multi_baseline'],
+        [['bert_frozen'], ['one', 'a-gem', 'hat', 'kan', 'ncl', 'ewc'], 'multi_baseline'],
         
-    #     # multi_backbone
-    #     [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
-    #     [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
-    #     [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
-    #     [['bert_frozen'], ['kan'], 'multi_backbone'],
-    #     [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
-    #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
-    #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone'],
-    # ]
+        # multi_backbone
+        [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
+        [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
+        [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
+        [['bert_frozen'], ['kan'], 'multi_backbone'],
+        [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
+        [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+        [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
+    ]
     
-    # for elmt in list_create_viz:
-    #     run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
+    for elmt in list_create_viz:
+        run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
@@ -818,10 +835,10 @@ if __name__ == "__main__":
     # calculate_metrics(list_exp.iterrows())
     
     # get worst forgetting
-    with open('res/til_classification/result_transfer_cl.csv', 'a', newline='') as fp:
-        for index, elmt in list_exp.iterrows():
-            csv_writer = csv.writer(fp, delimiter=',')
+    # with open('res/til_classification/result_transfer_cl.csv', 'a', newline='') as fp:
+    #     for index, elmt in list_exp.iterrows():
+    #         csv_writer = csv.writer(fp, delimiter=',')
             
-            result = get_best_transfer('', elmt['exp_id'], elmt['backbone'], elmt['baseline'], list_task[elmt['id_random']])
-            csv_writer.writerow([elmt['exp_id'], elmt['backbone'], elmt['baseline'], result['delta'], result['name_task_effected'], result['name_task_effecting'], result['id_task_effected'], result['id_task_effecting']])
+    #         result = get_best_transfer('', elmt['exp_id'], elmt['backbone'], elmt['baseline'], list_task[elmt['id_random']])
+    #         csv_writer.writerow([elmt['exp_id'], elmt['backbone'], elmt['baseline'], result['delta'], result['name_task_effected'], result['name_task_effecting'], result['id_task_effected'], result['id_task_effecting']])
             
