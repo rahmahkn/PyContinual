@@ -479,6 +479,26 @@ tasks_const = {
 './dat/nusacrowd/nusax_senti_sun': 'NusaX_Sundanese'    
 }
 
+tasks_id_const = {
+'./dat/nusacrowd/code_mixed_jv_id': 0,
+'./dat/nusacrowd/emot': 1,
+'./dat/nusacrowd/emotcmt': 2,
+'./dat/nusacrowd/imdb_jv': 3,
+'./dat/nusacrowd/karonese_sentiment': 4,
+'./dat/nusacrowd/smsa': 5,
+'./dat/nusacrowd/nusax_senti_ace': 6,
+'./dat/nusacrowd/nusax_senti_ban': 7,
+'./dat/nusacrowd/nusax_senti_bbc': 8,
+'./dat/nusacrowd/nusax_senti_bjn': 9,
+'./dat/nusacrowd/nusax_senti_bug': 10,
+'./dat/nusacrowd/nusax_senti_ind': 11,
+'./dat/nusacrowd/nusax_senti_jav': 12,
+'./dat/nusacrowd/nusax_senti_mad': 13,
+'./dat/nusacrowd/nusax_senti_min': 14,
+'./dat/nusacrowd/nusax_senti_nij': 15,
+'./dat/nusacrowd/nusax_senti_sun': 16
+}
+
 def get_average(matrix):
     mat = np.array(matrix)
     n_tasks = len(mat)
@@ -810,7 +830,9 @@ def create_transfer(exp_id, output, metric):
     
     np.savetxt(output + f'progressive.transfer.{metric}.' + str(exp_id), df_transfer, '%.4f', delimiter='\t')
 
-def create_heatmap(exp_id, output, metric):
+def create_heatmap(exp_id, backbone, baseline, metric):
+    output = get_output(backbone, baseline, exp_id)
+    
     # import task name
     tasks_df = pd.read_csv(get_filename('', exp_id, output, "tasks"), sep="\s+", names=['Task'])
     for i in range (len(tasks_df)):
@@ -818,16 +840,37 @@ def create_heatmap(exp_id, output, metric):
     
     # import file with data
     data = pd.read_csv(get_filename('', exp_id, output, metric),  sep="\t", names=tasks_df['Task'].values)
+    data['Task'] = tasks_df['Task'].values
+    data.set_index('Task', inplace=True)
         
     plt.figure(figsize=(12, 8))
     
     # plotting correlation heatmap
-    dataplot = sb.heatmap(data.corr())
+    dataplot = sb.heatmap(data)
     
     # saving heatmap
     plt.subplots_adjust(bottom=0.3, left=0.4)
-    # plt.show()
+    plt.title(f"{exp_id} - {backbone}_{baseline}")
     plt.savefig(f"{output}_{metric}_{exp_id}.png", bbox_inches='tight')
+    
+def merge_heatmap(list_exp_id, backbone, baseline):
+    # get list of dataframe
+    list_df = []
+    for exp_id in list_exp_id:
+        output = get_output(backbone, baseline, exp_id)
+    
+        # get task name
+        tasks_df = pd.read_csv(get_filename('', exp_id, output, "tasks"), sep="\s+", names=['Task'])
+        
+        df_temp = pd.read_csv(get_filename('', exp_id, output, 'transfer.f1_macro'), sep="\s+", names=[i for i in range(17)])
+        df = pd.DataFrame(columns=[tasks_id_const[tasks_df['Task'].values[i]] for i in range(17)])
+        
+        for i in range(len(tasks_df['Task'].values)):
+            df[tasks_id_const[tasks_df['Task'].values[i]]] = df_temp[i]
+        
+        list_df.append(df)
+        
+    print(list_df[2])
 
 ########################################################################################################################
             
@@ -882,7 +925,10 @@ if __name__ == "__main__":
     #         create_transfer(row['exp_id'], get_output(row['backbone'], row['baseline'], row['exp_id']), 'f1_macro')
     
     # # create heatmap
-    # create_heatmap(111, get_output('bert_adapter', 'b-cl', 111), 'transfer.f1_macro')
-    for index, row in list_exp.iterrows():
-        if (row['baseline'] != 'mtl') or (row['baseline'] != 'one'):
-            create_heatmap(row['exp_id'], get_output(row['backbone'], row['baseline'], row['exp_id']), 'transfer.f1_macro')
+    # create_heatmap(111, 'bert_adapter', 'b-cl', 'transfer.f1_macro')
+    # for index, row in list_exp.iterrows():
+    #     if (row['baseline'] != 'mtl') or (row['baseline'] != 'one'):
+    #         create_heatmap(row['exp_id'], row['backbone'], row['baseline'], 'transfer.f1_macro')
+    
+    # create merge heatmap
+    merge_heatmap([111, 112, 113], 'bert_adapter', 'b-cl')
