@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
+import seaborn as sb
 
 ########################################################################################################################
 
@@ -796,6 +797,39 @@ def run_create_viz(list_backbone, list_baseline, title, typ):
         merge_viz('', list_exp_id, list_backbone, list_baseline, title, metrics, typ)
 
 ########################################################################################################################
+
+def create_transfer(exp_id, output, metric):
+    # import file with data
+    data = pd.read_csv(get_filename('', exp_id, output, metric),  sep="\t", names=[i for i in range(17)])
+    data_list = data.values.tolist()
+    
+    df_transfer = [data_list[0]]
+    
+    for i in range (1, 17):
+        df_transfer.append([(data_list[i][j]-data_list[i-1][j]) for j in range(17)])
+    
+    np.savetxt(output + f'progressive.transfer.{metric}.' + str(exp_id), df_transfer, '%.4f', delimiter='\t')
+
+def create_heatmap(exp_id, output, metric):
+    # import task name
+    tasks_df = pd.read_csv(get_filename('', exp_id, output, "tasks"), sep="\s+", names=['Task'])
+    for i in range (len(tasks_df)):
+        tasks_df['Task'][i] = tasks_const[tasks_df['Task'][i]]
+    
+    # import file with data
+    data = pd.read_csv(get_filename('', exp_id, output, metric),  sep="\t", names=tasks_df['Task'].values)
+        
+    plt.figure(figsize=(12, 8))
+    
+    # plotting correlation heatmap
+    dataplot = sb.heatmap(data.corr())
+    
+    # saving heatmap
+    plt.subplots_adjust(bottom=0.3, left=0.4)
+    # plt.show()
+    plt.savefig(f"{output}_{metric}_{exp_id}.png", bbox_inches='tight')
+
+########################################################################################################################
             
 if __name__ == "__main__":
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
@@ -809,24 +843,24 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    list_create_viz = [
-        # multi_baseline
-        [['bert'], ['mtl', 'one', 'ncl'], 'multi_baseline'],
-        [['bert_adapter'], ['mtl', 'hat', 'a-gem', 'ewc'], 'multi_baseline'],
-        [['bert_frozen'], ['one', 'a-gem', 'hat', 'kan', 'ncl', 'ewc'], 'multi_baseline'],
+    # list_create_viz = [
+    #     # multi_baseline
+    #     [['bert'], ['mtl', 'one', 'ncl'], 'multi_baseline'],
+    #     [['bert_adapter'], ['mtl', 'hat', 'a-gem', 'ewc'], 'multi_baseline'],
+    #     [['bert_frozen'], ['one', 'a-gem', 'hat', 'kan', 'ncl', 'ewc'], 'multi_baseline'],
         
-        # multi_backbone
-        [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
-        [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
-        [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
-        [['bert_frozen'], ['kan'], 'multi_backbone'],
-        [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
-    ]
+    #     # multi_backbone
+    #     [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
+    #     [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
+    #     [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
+    #     [['bert_frozen'], ['kan'], 'multi_backbone'],
+    #     [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
+    # ]
     
-    for elmt in list_create_viz:
-        run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
+    # for elmt in list_create_viz:
+    #     run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
@@ -841,4 +875,14 @@ if __name__ == "__main__":
             
     #         result = get_best_transfer('', elmt['exp_id'], elmt['backbone'], elmt['baseline'], list_task[elmt['id_random']])
     #         csv_writer.writerow([elmt['exp_id'], elmt['backbone'], elmt['baseline'], result['delta'], result['name_task_effected'], result['name_task_effecting'], result['id_task_effected'], result['id_task_effecting']])
-            
+    
+    # create transfer matrix
+    # for index, row in list_exp.iterrows():
+    #     if (row['baseline'] != 'mtl') or (row['baseline'] != 'one'):
+    #         create_transfer(row['exp_id'], get_output(row['backbone'], row['baseline'], row['exp_id']), 'f1_macro')
+    
+    # # create heatmap
+    # create_heatmap(111, get_output('bert_adapter', 'b-cl', 111), 'transfer.f1_macro')
+    for index, row in list_exp.iterrows():
+        if (row['baseline'] != 'mtl') or (row['baseline'] != 'one'):
+            create_heatmap(row['exp_id'], get_output(row['backbone'], row['baseline'], row['exp_id']), 'transfer.f1_macro')
