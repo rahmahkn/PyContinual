@@ -857,20 +857,34 @@ def merge_heatmap(list_exp_id, backbone, baseline):
     # get list of dataframe
     list_df = []
     for exp_id in list_exp_id:
-        output = get_output(backbone, baseline, exp_id)
-    
         # get task name
+        output = get_output(backbone, baseline, exp_id)
         tasks_df = pd.read_csv(get_filename('', exp_id, output, "tasks"), sep="\s+", names=['Task'])
         
-        df_temp = pd.read_csv(get_filename('', exp_id, output, 'transfer.f1_macro'), sep="\s+", names=[i for i in range(17)])
-        df = pd.DataFrame(columns=[tasks_id_const[tasks_df['Task'].values[i]] for i in range(17)])
-        
-        for i in range(len(tasks_df['Task'].values)):
-            df[tasks_id_const[tasks_df['Task'].values[i]]] = df_temp[i]
-        
+        # make dataframe for each exp
+        df = pd.read_csv(get_filename('', exp_id, output, 'transfer.f1_macro'), sep="\s+", names=[tasks_id_const[tasks_df['Task'].values.tolist()[i]] for i in range(17)])
         list_df.append(df)
-        
-    print(list_df[2])
+    
+    result_df = pd.DataFrame(columns=[i for i in range(17)])
+    for i in range(17):
+        result_df[i] = [np.average([list_df[0][i][j], list_df[1][i][j], list_df[2][i][j]]) for j in range(17)]
+    
+    result_df.set_axis(tasks_const.values(), axis='columns', inplace=True)
+    result_df['Task'] = tasks_const.values()
+    result_df.set_index('Task', inplace=True)
+    np.savetxt(f"viz/heatmap/{backbone}_{baseline}_f1_macro", result_df, '%.4f', delimiter='\t')
+    
+    # create heatmap
+    plt.figure(figsize=(12, 8))
+    
+    # plotting correlation heatmap
+    dataplot = sb.heatmap(result_df)
+    
+    # saving heatmap
+    plt.subplots_adjust(bottom=0.3, left=0.4)
+    plt.title(f"heatmap - {backbone}_{baseline}")
+    plt.savefig(f"viz/heatmap/{backbone}_{baseline}_f1_macro.png", bbox_inches='tight')
+    plt.close()
 
 ########################################################################################################################
             
@@ -931,4 +945,27 @@ if __name__ == "__main__":
     #         create_heatmap(row['exp_id'], row['backbone'], row['baseline'], 'transfer.f1_macro')
     
     # create merge heatmap
-    merge_heatmap([111, 112, 113], 'bert_adapter', 'b-cl')
+    list_setting = [
+        ['bert', 'mtl'],
+        ['bert', 'one'],
+        ['bert', 'ncl'],
+        ['bert_adapter', 'mtl'],
+        ['bert_adapter', 'hat'],
+        ['bert_adapter', 'ewc'],
+        ['bert_adapter', 'a-gem'],
+        ['bert_frozen', 'one'],
+        ['bert_frozen', 'ewc'],
+        ['bert_frozen', 'a-gem'],
+        ['bert_frozen', 'ncl'],
+        ['bert_frozen', 'hat'],
+        ['bert_frozen', 'kan'],
+        ['bert_adapter', 'b-cl']
+    ]
+    
+    for setting in list_setting:
+        list_exp_id = []
+        for index, row in list_exp.iterrows():
+            if (row['baseline'] == setting[1]) and (row['backbone'] == setting[0]):
+                list_exp_id.append(row['exp_id'])
+                
+        merge_heatmap(list_exp_id, setting[0], setting[1])
