@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
+import seaborn as sb
 
 ########################################################################################################################
 
@@ -478,6 +479,26 @@ tasks_const = {
 './dat/nusacrowd/nusax_senti_sun': 'NusaX_Sundanese'    
 }
 
+tasks_id_const = {
+'./dat/nusacrowd/code_mixed_jv_id': 0,
+'./dat/nusacrowd/emot': 1,
+'./dat/nusacrowd/emotcmt': 2,
+'./dat/nusacrowd/imdb_jv': 3,
+'./dat/nusacrowd/karonese_sentiment': 4,
+'./dat/nusacrowd/smsa': 5,
+'./dat/nusacrowd/nusax_senti_ace': 6,
+'./dat/nusacrowd/nusax_senti_ban': 7,
+'./dat/nusacrowd/nusax_senti_bbc': 8,
+'./dat/nusacrowd/nusax_senti_bjn': 9,
+'./dat/nusacrowd/nusax_senti_bug': 10,
+'./dat/nusacrowd/nusax_senti_ind': 11,
+'./dat/nusacrowd/nusax_senti_jav': 12,
+'./dat/nusacrowd/nusax_senti_mad': 13,
+'./dat/nusacrowd/nusax_senti_min': 14,
+'./dat/nusacrowd/nusax_senti_nij': 15,
+'./dat/nusacrowd/nusax_senti_sun': 16
+}
+
 def get_average(matrix):
     mat = np.array(matrix)
     n_tasks = len(mat)
@@ -796,6 +817,76 @@ def run_create_viz(list_backbone, list_baseline, title, typ):
         merge_viz('', list_exp_id, list_backbone, list_baseline, title, metrics, typ)
 
 ########################################################################################################################
+
+def create_transfer(exp_id, output, metric):
+    # import file with data
+    data = pd.read_csv(get_filename('', exp_id, output, metric),  sep="\t", names=[i for i in range(17)])
+    data_list = data.values.tolist()
+    
+    df_transfer = [data_list[0]]
+    
+    for i in range (1, 17):
+        df_transfer.append([(data_list[i][j]-data_list[i-1][j]) for j in range(17)])
+    
+    np.savetxt(output + f'progressive.transfer.{metric}.' + str(exp_id), df_transfer, '%.4f', delimiter='\t')
+
+def create_heatmap(exp_id, backbone, baseline, metric):
+    output = get_output(backbone, baseline, exp_id)
+    
+    # import task name
+    tasks_df = pd.read_csv(get_filename('', exp_id, output, "tasks"), sep="\s+", names=['Task'])
+    for i in range (len(tasks_df)):
+        tasks_df['Task'][i] = tasks_const[tasks_df['Task'][i]]
+    
+    # import file with data
+    data = pd.read_csv(get_filename('', exp_id, output, metric),  sep="\t", names=tasks_df['Task'].values)
+    data['Task'] = tasks_df['Task'].values
+    data.set_index('Task', inplace=True)
+        
+    plt.figure(figsize=(12, 8))
+    
+    # plotting correlation heatmap
+    dataplot = sb.heatmap(data)
+    
+    # saving heatmap
+    plt.subplots_adjust(bottom=0.3, left=0.4)
+    plt.title(f"{exp_id} - {backbone}_{baseline}")
+    plt.savefig(f"{output}_{metric}_{exp_id}.png", bbox_inches='tight')
+    
+def merge_heatmap(list_exp_id, backbone, baseline):
+    # get list of dataframe
+    list_df = []
+    for exp_id in list_exp_id:
+        # get task name
+        output = get_output(backbone, baseline, exp_id)
+        tasks_df = pd.read_csv(get_filename('', exp_id, output, "tasks"), sep="\s+", names=['Task'])
+        
+        # make dataframe for each exp
+        df = pd.read_csv(get_filename('', exp_id, output, 'transfer.f1_macro'), sep="\s+", names=[tasks_id_const[tasks_df['Task'].values.tolist()[i]] for i in range(17)])
+        list_df.append(df)
+    
+    result_df = pd.DataFrame(columns=[i for i in range(17)])
+    for i in range(17):
+        result_df[i] = [np.average([list_df[0][i][j], list_df[1][i][j], list_df[2][i][j]]) for j in range(17)]
+    
+    result_df.set_axis(tasks_const.values(), axis='columns', inplace=True)
+    result_df['Task'] = tasks_const.values()
+    result_df.set_index('Task', inplace=True)
+    np.savetxt(f"viz/heatmap/{backbone}_{baseline}_f1_macro", result_df, '%.4f', delimiter='\t')
+    
+    # create heatmap
+    plt.figure(figsize=(12, 8))
+    
+    # plotting correlation heatmap
+    dataplot = sb.heatmap(result_df)
+    
+    # saving heatmap
+    plt.subplots_adjust(bottom=0.3, left=0.4)
+    plt.title(f"heatmap - {backbone}_{baseline}")
+    plt.savefig(f"viz/heatmap/{backbone}_{baseline}_f1_macro.png", bbox_inches='tight')
+    plt.close()
+
+########################################################################################################################
             
 if __name__ == "__main__":
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
@@ -809,24 +900,24 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    list_create_viz = [
-        # multi_baseline
-        [['bert'], ['mtl', 'one', 'ncl'], 'multi_baseline'],
-        [['bert_adapter'], ['mtl', 'hat', 'a-gem', 'ewc'], 'multi_baseline'],
-        [['bert_frozen'], ['one', 'a-gem', 'hat', 'kan', 'ncl', 'ewc'], 'multi_baseline'],
+    # list_create_viz = [
+    #     # multi_baseline
+    #     [['bert'], ['mtl', 'one', 'ncl'], 'multi_baseline'],
+    #     [['bert_adapter'], ['mtl', 'hat', 'a-gem', 'ewc'], 'multi_baseline'],
+    #     [['bert_frozen'], ['one', 'a-gem', 'hat', 'kan', 'ncl', 'ewc'], 'multi_baseline'],
         
-        # multi_backbone
-        [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
-        [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
-        [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
-        [['bert_frozen'], ['kan'], 'multi_backbone'],
-        [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
-    ]
+    #     # multi_backbone
+    #     [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
+    #     [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
+    #     [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
+    #     [['bert_frozen'], ['kan'], 'multi_backbone'],
+    #     [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
+    # ]
     
-    for elmt in list_create_viz:
-        run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
+    # for elmt in list_create_viz:
+    #     run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
@@ -841,4 +932,40 @@ if __name__ == "__main__":
             
     #         result = get_best_transfer('', elmt['exp_id'], elmt['backbone'], elmt['baseline'], list_task[elmt['id_random']])
     #         csv_writer.writerow([elmt['exp_id'], elmt['backbone'], elmt['baseline'], result['delta'], result['name_task_effected'], result['name_task_effecting'], result['id_task_effected'], result['id_task_effecting']])
-            
+    
+    # create transfer matrix
+    # for index, row in list_exp.iterrows():
+    #     if (row['baseline'] != 'mtl') or (row['baseline'] != 'one'):
+    #         create_transfer(row['exp_id'], get_output(row['backbone'], row['baseline'], row['exp_id']), 'f1_macro')
+    
+    # # create heatmap
+    # create_heatmap(111, 'bert_adapter', 'b-cl', 'transfer.f1_macro')
+    # for index, row in list_exp.iterrows():
+    #     if (row['baseline'] != 'mtl') or (row['baseline'] != 'one'):
+    #         create_heatmap(row['exp_id'], row['backbone'], row['baseline'], 'transfer.f1_macro')
+    
+    # create merge heatmap
+    list_setting = [
+        ['bert', 'mtl'],
+        ['bert', 'one'],
+        ['bert', 'ncl'],
+        ['bert_adapter', 'mtl'],
+        ['bert_adapter', 'hat'],
+        ['bert_adapter', 'ewc'],
+        ['bert_adapter', 'a-gem'],
+        ['bert_frozen', 'one'],
+        ['bert_frozen', 'ewc'],
+        ['bert_frozen', 'a-gem'],
+        ['bert_frozen', 'ncl'],
+        ['bert_frozen', 'hat'],
+        ['bert_frozen', 'kan'],
+        ['bert_adapter', 'b-cl']
+    ]
+    
+    for setting in list_setting:
+        list_exp_id = []
+        for index, row in list_exp.iterrows():
+            if (row['baseline'] == setting[1]) and (row['backbone'] == setting[0]):
+                list_exp_id.append(row['exp_id'])
+                
+        merge_heatmap(list_exp_id, setting[0], setting[1])
