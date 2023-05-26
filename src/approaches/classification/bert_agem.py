@@ -1,14 +1,28 @@
 import sys,time
 import numpy as np
 import torch
-from copy import deepcopy
-import quadprog
-import utils
+import os
+import logging
+import glob
+import math
+import json
+import argparse
+import random
 from tqdm import tqdm, trange
-from torch.utils.data import DataLoader
+import numpy as np
+import torch
+from torch.utils.data import RandomSampler
+from torch.utils.data.distributed import DistributedSampler
+import torch.distributed as dist
+from torch.utils.data import TensorDataset, random_split
+import utils
+# from apex import amp
+from pytorch_pretrained_bert.tokenization import BertTokenizer
+from pytorch_pretrained_bert.modeling import BertForSequenceClassification
+from pytorch_pretrained_bert.optimization import BertAdam
+import torch.autograd as autograd
 sys.path.append("./approaches/base/")
-from bert_cnn_base import Appr as ApprBase
-#TODO: GEM is very expensive, consider A-GEM
+from bert_base import Appr as ApprBase
 
 class Appr(ApprBase):
     """ A-GEM adpted from https://github.com/aimagelab/mammoth/blob/master/models/agem.py """
@@ -24,6 +38,22 @@ class Appr(ApprBase):
 
 
     def train(self,t,train,valid,num_train_steps,train_data,valid_data):
+        global_step = 0
+        self.model.to(self.device)
+
+        param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
+        param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+            ]
+        t_total = num_train_steps
+        optimizer = BertAdam(optimizer_grouped_parameters,
+                             lr=self.args.learning_rate,
+                             warmup=self.args.warmup_proportion,
+                             t_total=t_total)
+        
         best_loss=np.inf
         best_model=utils.get_model(self.model)
         lr=self.lr
@@ -35,8 +65,9 @@ class Appr(ApprBase):
             # Train
             clock0=time.time()
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-            self.train_epoch(t,train,iter_bar)
+            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
             clock1=time.time()
+            
             train_loss,train_acc,train_f1_macro=self.eval(t,train)
             clock2=time.time()
             # print('time: ',float((clock1-clock0)*30*25))
@@ -147,9 +178,15 @@ class Appr(ApprBase):
             torch.nn.utils.clip_grad_norm(self.model.parameters(),self.clipgrad)
 
             # Backward
+            lr_this_step = self.args.learning_rate * \
+                           self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr_this_step
             self.optimizer.step()
+            self.optimizer.zero_grad()
+            global_step += 1
 
-        return
+        return global_step
 
     def eval(self,t,data,test=None,trained_task=None):
         total_loss=0
