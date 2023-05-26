@@ -216,6 +216,9 @@ if args.task in language_dataset:
         if args.baseline == 'mtl':
             from approaches.classification import bert_mtl as approach
             from networks.classification import bert as network
+        if args.baseline == 'a-gem':
+            from approaches.classification import bert_agem as approach
+            from networks.classification import bert as network
     
     
     if args.backbone == 'bert_adapter':
