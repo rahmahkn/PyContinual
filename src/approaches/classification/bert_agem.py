@@ -56,9 +56,6 @@ class Appr(ApprBase):
         
         best_loss=np.inf
         best_model=utils.get_model(self.model)
-        lr=self.lr
-        patience=self.lr_patience
-        self.optimizer=self._get_optimizer(lr)
 
         # Loop epochs
         for e in range(self.nepochs):
