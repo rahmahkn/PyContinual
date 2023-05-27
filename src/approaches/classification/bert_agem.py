@@ -11,10 +11,12 @@ import random
 from tqdm import tqdm, trange
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 from torch.utils.data import RandomSampler
 from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
 from torch.utils.data import TensorDataset, random_split
+import quadprog
 import utils
 # from apex import amp
 from pytorch_pretrained_bert.tokenization import BertTokenizer
@@ -58,7 +60,7 @@ class Appr(ApprBase):
         best_model=utils.get_model(self.model)
 
         # Loop epochs
-        for e in range(self.nepochs):
+        for e in range(int(self.args.num_train_epochs)):
             # Train
             clock0=time.time()
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
@@ -80,16 +82,7 @@ class Appr(ApprBase):
                 best_model=utils.get_model(self.model)
                 patience=self.lr_patience
                 print(' *',end='')
-            else:
-                patience-=1
-                if patience<=0:
-                    lr/=self.lr_factor
-                    print(' lr={:.1e}'.format(lr),end='')
-                    if lr<self.lr_min:
-                        print()
-                        break
-                    patience=self.lr_patience
-                    self.optimizer=self._get_optimizer(lr)
+
             print()
 
         # Restore best
@@ -117,7 +110,7 @@ class Appr(ApprBase):
 
         return
 
-    def train_epoch(self,t,data,iter_bar):
+    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step):
         self.model.train()
 
         for step, batch in enumerate(iter_bar):
@@ -127,7 +120,7 @@ class Appr(ApprBase):
 
 
             # now compute the grad on the current data
-            self.optimizer.zero_grad()
+            optimizer.zero_grad()
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
             if 'dil' in self.args.scenario:
                 output=output_dict['y']
@@ -179,8 +172,8 @@ class Appr(ApprBase):
                            self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr_this_step
-            self.optimizer.step()
-            self.optimizer.zero_grad()
+            optimizer.step()
+            optimizer.zero_grad()
             global_step += 1
 
         return global_step
