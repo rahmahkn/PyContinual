@@ -1,12 +1,31 @@
 import sys,time
 import numpy as np
 import torch
-from copy import deepcopy
-
-import utils
+import os
+import logging
+import glob
+import math
+import json
+import argparse
+import random
 from tqdm import tqdm, trange
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
+from torch.utils.data import RandomSampler
+from torch.utils.data.distributed import DistributedSampler
+import torch.distributed as dist
+from torch.utils.data import TensorDataset, random_split
+import quadprog
+import utils
+# from apex import amp
+from pytorch_pretrained_bert.tokenization import BertTokenizer
+from pytorch_pretrained_bert.modeling import BertForSequenceClassification
+from pytorch_pretrained_bert.optimization import BertAdam
+import torch.autograd as autograd
 sys.path.append("./approaches/base/")
-from bert_cnn_base import Appr as ApprBase
+from copy import deepcopy
+from bert_base import Appr as ApprBase
 
 class Appr(ApprBase):
     """ Class implementing the Elastic Weight Consolidation approach described in http://arxiv.org/abs/1612.00796 """
@@ -19,18 +38,32 @@ class Appr(ApprBase):
 
 
     def train(self,t,train,valid,num_train_steps,train_data,valid_data):
+        
+        global_step = 0
+        self.model.to(self.device)
+
+        param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
+        param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
+        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        optimizer_grouped_parameters = [
+            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+            ]
+        t_total = num_train_steps
+        optimizer = BertAdam(optimizer_grouped_parameters,
+                             lr=self.args.learning_rate,
+                             warmup=self.args.warmup_proportion,
+                             t_total=t_total)
+        
         best_loss=np.inf
         best_model=utils.get_model(self.model)
-        lr=self.lr
-        patience=self.lr_patience
-        self.optimizer=self._get_optimizer(lr)
 
         # Loop epochs
-        for e in range(self.nepochs):
+        for e in range(int(self.args.num_train_epochs)):
             # Train
             clock0=time.time()
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-            self.train_epoch(t,train,iter_bar)
+            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
             clock1=time.time()
             train_loss,train_acc,train_f1_macro=self.eval(t,train)
             clock2=time.time()
@@ -47,16 +80,7 @@ class Appr(ApprBase):
                 best_model=utils.get_model(self.model)
                 patience=self.lr_patience
                 print(' *',end='')
-            else:
-                patience-=1
-                if patience<=0:
-                    lr/=self.lr_factor
-                    print(' lr={:.1e}'.format(lr),end='')
-                    if lr<self.lr_min:
-                        print()
-                        break
-                    patience=self.lr_patience
-                    self.optimizer=self._get_optimizer(lr)
+
             print()
 
         # Restore best
@@ -86,7 +110,7 @@ class Appr(ApprBase):
 
         return
 
-    def train_epoch(self,t,data,iter_bar):
+    def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step):
         self.model.train()
 
         for step, batch in enumerate(iter_bar):
@@ -105,10 +129,10 @@ class Appr(ApprBase):
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
 
             # Backward
-            self.optimizer.zero_grad()
+            optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm(self.model.parameters(),self.clipgrad)
-            self.optimizer.step()
+            optimizer.step()
 
         return
 
