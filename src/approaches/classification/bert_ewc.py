@@ -24,22 +24,21 @@ from pytorch_pretrained_bert.modeling import BertForSequenceClassification
 from pytorch_pretrained_bert.optimization import BertAdam
 import torch.autograd as autograd
 sys.path.append("./approaches/base/")
+from copy import deepcopy
 from bert_base import Appr as ApprBase
 
 class Appr(ApprBase):
-    """ A-GEM adpted from https://github.com/aimagelab/mammoth/blob/master/models/agem.py """
+    """ Class implementing the Elastic Weight Consolidation approach described in http://arxiv.org/abs/1612.00796 """
 
-    def __init__(self,model,logger,taskcla, args=None):
+    def __init__(self,model,args=None,taskcla=None,logger=None):
         super().__init__(model=model,logger=logger,taskcla=taskcla,args=args)
-
-
-        print('CONTEXTUAL CNN AGEM NCL')
-
+        print('DIL CONTEXTUAL CNN EWC NCL')
         return
 
 
 
     def train(self,t,train,valid,num_train_steps,train_data,valid_data):
+        
         global_step = 0
         self.model.to(self.device)
 
@@ -66,7 +65,6 @@ class Appr(ApprBase):
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
             global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
             clock1=time.time()
-            
             train_loss,train_acc,train_f1_macro=self.eval(t,train)
             clock2=time.time()
             # print('time: ',float((clock1-clock0)*30*25))
@@ -89,24 +87,26 @@ class Appr(ApprBase):
         utils.set_model_(self.model,best_model)
 
         # Update old
+        self.model_old=deepcopy(self.model)
+        self.model_old.eval()
+        utils.freeze_model(self.model_old) # Freeze the weights
 
-        # add data to the buffer
-        print('len(train): ',len(train_data))
-        samples_per_task = int(len(train_data) * self.args.buffer_percent)
-        print('samples_per_task: ',samples_per_task)
+        # Fisher ops
+        if t>0:
+            fisher_old={}
+            for n,_ in self.model.named_parameters():
+                fisher_old[n]=self.fisher[n].clone()
 
-        loader = DataLoader(train_data, batch_size=samples_per_task)
+        if 'dil' in self.args.scenario:
+            self.fisher=utils.fisher_matrix_diag_bert_dil(t,train_data,self.device,self.model,self.criterion_ewc)
+        elif 'til' in self.args.scenario:
+            self.fisher=utils.fisher_matrix_diag_bert(t,train_data,self.device,self.model,self.criterion_ewc)
 
-        input_ids, segment_ids, input_mask, targets,_ = next(iter(loader))
-
-        self.buffer.add_data(
-            examples=input_ids.to(self.device),
-            segment_ids=segment_ids.to(self.device),
-            input_mask=input_mask.to(self.device),
-            labels=targets.to(self.device),
-            task_labels=torch.ones(samples_per_task,
-                dtype=torch.long).to(self.device) * (t)
-        )
+        if t>0:
+            # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
+            for n,_ in self.model.named_parameters():
+                self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
+                #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
 
         return
 
@@ -118,65 +118,23 @@ class Appr(ApprBase):
                 bat.to(self.device) if bat is not None else None for bat in batch]
             input_ids, segment_ids, input_mask, targets,_= batch
 
-
-            # now compute the grad on the current data
-            optimizer.zero_grad()
-            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            # Forward current model
+            output_dict=self.model.forward(input_ids, segment_ids, input_mask)
             if 'dil' in self.args.scenario:
                 output=output_dict['y']
             elif 'til' in self.args.scenario:
                 outputs=output_dict['y']
                 output = outputs[t]
-
-            loss = self.ce(output, targets)
-            loss.backward() #backward first
-
-
-            # Forward current model
-            if not self.buffer.is_empty():
-                self.store_grad(self.model.parameters, self.grad_xy, self.grad_dims)
-                buf_inputs, buf_labels, buf_task_labels, buf_segment_ids,buf_input_mask = self.buffer.get_data(
-                    self.args.buffer_size)
-                self.model.zero_grad()
-                buf_inputs = buf_inputs.long()
-                buf_segment = buf_segment_ids.long()
-                buf_mask = buf_input_mask.long()
-                buf_labels = buf_labels.long()
-
-                output_dict = self.model.forward(buf_inputs, buf_segment, buf_mask)
-                if 'dil' in self.args.scenario:
-                    cur_output=output_dict['y']
-                elif 'til' in self.args.scenario:
-                    outputs=output_dict['y']
-                    cur_output = outputs[t]
-
-                penalty = self.ce(cur_output, buf_labels)
-                penalty.backward()
-                self.store_grad(self.model.parameters, self.grad_er, self.grad_dims)
-
-                dot_prod = torch.dot(self.grad_xy, self.grad_er)
-                if dot_prod.item() < 0:
-                    g_tilde = self.project(gxy=self.grad_xy, ger=self.grad_er)
-                    self.overwrite_grad(self.model.parameters, g_tilde, self.grad_dims)
-                else:
-                     self.overwrite_grad(self.model.parameters, self.grad_xy, self.grad_dims)
-
-
-
-
+            loss=self.criterion_ewc(t,output,targets)
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
-            torch.nn.utils.clip_grad_norm(self.model.parameters(),self.clipgrad)
 
             # Backward
-            lr_this_step = self.args.learning_rate * \
-                           self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = lr_this_step
-            optimizer.step()
             optimizer.zero_grad()
-            global_step += 1
+            loss.backward()
+            torch.nn.utils.clip_grad_norm(self.model.parameters(),self.clipgrad)
+            optimizer.step()
 
-        return global_step
+        return
 
     def eval(self,t,data,test=None,trained_task=None):
         total_loss=0
@@ -195,14 +153,12 @@ class Appr(ApprBase):
 
                 # Forward
                 output_dict = self.model.forward(input_ids, segment_ids, input_mask)
-
                 if 'dil' in self.args.scenario:
                     output=output_dict['y']
                 elif 'til' in self.args.scenario:
                     outputs=output_dict['y']
                     output = outputs[t]
-
-                loss=self.ce(output,targets)
+                loss=self.criterion_ewc(t,output,targets)
                 _,pred=output.max(1)
                 hits=(pred==targets).float()
 
@@ -215,6 +171,9 @@ class Appr(ApprBase):
 
             f1=self.f1_compute_fn(y_pred=torch.cat(pred_list,0),y_true=torch.cat(target_list,0),average='macro')
 
+        print(target_list)
+        print(pred_list)
+            
         return total_loss/total_num,total_acc/total_num,f1
 
 
