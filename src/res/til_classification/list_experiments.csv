@@ -1,4 +1,10 @@
 exp_id,backbone,baseline,id_random
+117,bert,a-gem
+118,bert,a-gem
+119,bert,a-gem
+120,bert,ewc
+121,bert,ewc
+122,bert,ewc
 35,bert,mtl,0
 60,bert,mtl,1
 71,bert,mtl,2
@@ -14,7 +20,9 @@ exp_id,backbone,baseline,id_random
 111,bert_adapter,b-cl
 112,bert_adapter,b-cl
 113,bert_adapter,b-cl
+114,bert_adapter,ctr
 115,bert_adapter,ctr
+116,bert_adapter,ctr
 77,bert_adapter,ewc,2
 84,bert_adapter,ewc,0
 85,bert_adapter,ewc,1

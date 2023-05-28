@@ -566,7 +566,7 @@ def calculate_metrics(data):
         backbone = row['backbone']
         
         output = get_output(backbone, baseline, exp_id)
-        filename = f'res/til_classification/nusacrowd/{backbone}_{baseline}_.txtprogressive.b.{exp_id}'
+        filename = f'res/til_classification/nusacrowd/b_vector/{backbone}_{baseline}_.txtprogressive.b.{exp_id}'
         
         with open(f'{output}progressive.acc.{exp_id}') as fp:
             mat_acc = [list(map(float, line.strip().split('\t'))) for line in fp]
@@ -923,7 +923,7 @@ if __name__ == "__main__":
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
-    # calculate_metrics(list_exp.iterrows())
+    calculate_metrics(list_exp.iterrows())
     
     # get worst forgetting
     # with open('res/til_classification/result_transfer_cl.csv', 'a', newline='') as fp:
@@ -945,27 +945,27 @@ if __name__ == "__main__":
     #         create_heatmap(row['exp_id'], row['backbone'], row['baseline'], 'transfer.f1_macro')
     
     # create merge heatmap
-    list_setting = [
-        ['bert', 'mtl'],
-        ['bert', 'one'],
-        ['bert', 'ncl'],
-        ['bert_adapter', 'mtl'],
-        ['bert_adapter', 'hat'],
-        ['bert_adapter', 'ewc'],
-        ['bert_adapter', 'a-gem'],
-        ['bert_frozen', 'one'],
-        ['bert_frozen', 'ewc'],
-        ['bert_frozen', 'a-gem'],
-        ['bert_frozen', 'ncl'],
-        ['bert_frozen', 'hat'],
-        ['bert_frozen', 'kan'],
-        ['bert_adapter', 'b-cl']
-    ]
+    # list_setting = [
+    #     ['bert', 'mtl'],
+    #     ['bert', 'one'],
+    #     ['bert', 'ncl'],
+    #     ['bert_adapter', 'mtl'],
+    #     ['bert_adapter', 'hat'],
+    #     ['bert_adapter', 'ewc'],
+    #     ['bert_adapter', 'a-gem'],
+    #     ['bert_frozen', 'one'],
+    #     ['bert_frozen', 'ewc'],
+    #     ['bert_frozen', 'a-gem'],
+    #     ['bert_frozen', 'ncl'],
+    #     ['bert_frozen', 'hat'],
+    #     ['bert_frozen', 'kan'],
+    #     ['bert_adapter', 'b-cl']
+    # ]
     
-    for setting in list_setting:
-        list_exp_id = []
-        for index, row in list_exp.iterrows():
-            if (row['baseline'] == setting[1]) and (row['backbone'] == setting[0]):
-                list_exp_id.append(row['exp_id'])
+    # for setting in list_setting:
+    #     list_exp_id = []
+    #     for index, row in list_exp.iterrows():
+    #         if (row['baseline'] == setting[1]) and (row['backbone'] == setting[0]):
+    #             list_exp_id.append(row['exp_id'])
                 
-        merge_heatmap(list_exp_id, setting[0], setting[1])
+    #     merge_heatmap(list_exp_id, setting[0], setting[1])
