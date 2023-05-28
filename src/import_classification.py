@@ -225,6 +225,9 @@ if args.task in language_dataset:
         if args.baseline == 'hat':
             from approaches.classification import bert_hat as approach
             from networks.classification import bert as network
+        if args.baseline == 'kan':
+            from approaches.classification import bert_kan as approach
+            from networks.classification import bert as network
     
     
     if args.backbone == 'bert_adapter':
