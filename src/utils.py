@@ -499,6 +499,25 @@ tasks_id_const = {
 './dat/nusacrowd/nusax_senti_sun': 16
 }
 
+transform_setting = {
+    "bert": "BERT",
+    "bert_frozen": "BERT (Frozen)",
+    "bert_adapter": "BERT + Adapter",
+    
+    "a-gem": "A-GEM",
+    "ewc": "EWC",
+    "hat": "HAT",
+    "kan": "KAN",
+    "one": "MONO",
+    "mtl": "MULTI",
+    "ncl": "VANILLA",
+    "ctr": "CTR",
+    "b-cl": "B-CL"
+}
+
+def transform_list(list):
+    return [transform_setting[elmt] for elmt in list]
+
 def get_average(matrix):
     mat = np.array(matrix)
     n_tasks = len(mat)
@@ -723,7 +742,7 @@ def visualize(dir_name, exp_id, output, case_name, task):
       plt.legend(tasks_df['Task'], bbox_to_anchor=(1.0, 1.0))
       plt.title(f'{title.replace("_.txt", "")} - {case_name}')
       plt.xticks(range(17), [i for i in range (1, 18)])
-      plt.xlabel('number of tasks')
+      plt.xlabel('task')
       plt.ylabel(metrics)
         
       if 'lss' not in metrics:
@@ -733,17 +752,20 @@ def visualize(dir_name, exp_id, output, case_name, task):
 
 def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename, list_exp_id):    
     color_const = {
-        'a-gem': ['c-', 'c'],
-        'ewc': ['m-', 'm'],
-        'hat': ['y-', 'y'],
-        'kan': ['g-', 'g'],
-        'ncl': ['r-', 'r'],
-        'one': ['b--', 'b'],
-        'mtl': ['k--', 'k'],
+        'A-GEM': ['c-', 'c'],
+        'EWC': ['m-', 'm'],
+        'HAT': ['y-', 'y'],
+        'KAN': ['g-', 'g'],
+        'CTR': ['g-', 'g'],
+        'B-CL': ['k-', 'k'],
+        'VANILLA': ['r-', 'r'],
         
-        'bert': ['c-', 'c'],
-        'bert_frozen': ['m-', 'm'],
-        'bert_adapter': ['y-', 'y']
+        'MONO': ['b--', 'b'],
+        'MULTI': ['k--', 'k'],
+        
+        'BERT': ['c-', 'c'],
+        'BERT (Frozen)': ['m-', 'm'],
+        'BERT + Adapter': ['y-', 'y']
     }
     
     
@@ -795,11 +817,14 @@ def merge_viz(dir_name, list_exp_id, list_backbone, list_baseline, case_name, me
             df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[exp_id])
         
     list_df.append(df)
+    
+  list_backbone = transform_list(list_backbone)
+  list_baseline = transform_list(list_baseline)
 
   if typ == 'multi_backbone':
-      create_viz(list_df, f'{baseline} - {case_name}', list_backbone, 'number of tasks', metrics, f"viz/{baseline}/{baseline}_{metrics}.png", list_exp_id)
+      create_viz(list_df, f'{baseline} - {case_name}', list_backbone, 'task', metrics, f"viz/{baseline}/{baseline}_{metrics}.png", list_exp_id)
   else: # type == 'multi_baseline'
-      create_viz(list_df, f'{backbone} - {case_name}', list_baseline, 'number of tasks', metrics, f"viz/{backbone}/{backbone}_{metrics}.png", list_exp_id)
+      create_viz(list_df, f'{backbone} - {case_name}', list_baseline, 'task', metrics, f"viz/{backbone}/{backbone}_{metrics}.png", list_exp_id)
 
 def run_create_viz(list_backbone, list_baseline, title, typ):
     list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
@@ -900,30 +925,30 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    # list_create_viz = [
-    #     # multi_baseline
-    #     [['bert'], ['mtl', 'one', 'ncl'], 'multi_baseline'],
-    #     [['bert_adapter'], ['mtl', 'hat', 'a-gem', 'ewc'], 'multi_baseline'],
-    #     [['bert_frozen'], ['one', 'a-gem', 'hat', 'kan', 'ncl', 'ewc'], 'multi_baseline'],
+    list_create_viz = [
+        # multi_baseline
+        [['bert'], ['mtl', 'one', 'ncl', 'ewc', 'a-gem'], 'multi_baseline'],
+        [['bert_adapter'], ['mtl', 'hat', 'a-gem', 'ewc', 'b-cl', 'ctr'], 'multi_baseline'],
+        [['bert_frozen'], ['one', 'a-gem', 'hat', 'kan', 'ncl', 'ewc'], 'multi_baseline'],
         
-    #     # multi_backbone
-    #     [['bert_adapter', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
-    #     [['bert_adapter', 'bert_frozen'], ['ewc'], 'multi_backbone'],
-    #     [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
-    #     [['bert_frozen'], ['kan'], 'multi_backbone'],
-    #     [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
-    #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
-    #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
-    # ]
+        # multi_backbone
+        [['bert_adapter', 'bert_frozen', 'bert'], ['a-gem'], 'multi_backbone'],
+        [['bert_adapter', 'bert_frozen', 'bert'], ['ewc'], 'multi_backbone'],
+        [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
+        [['bert_frozen'], ['kan'], 'multi_backbone'],
+        [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
+        [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+        [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
+    ]
     
-    # for elmt in list_create_viz:
-    #     run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
+    for elmt in list_create_viz:
+        run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
-    calculate_metrics(list_exp.iterrows())
+    # calculate_metrics(list_exp.iterrows())
     
     # get worst forgetting
     # with open('res/til_classification/result_transfer_cl.csv', 'a', newline='') as fp:
