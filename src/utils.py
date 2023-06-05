@@ -712,7 +712,7 @@ def visualize(dir_name, exp_id, output, case_name, task):
             df = pd.read_csv(get_filename(dir_name, exp_id, output, base_metrics), sep="\s+", names=[i for i in range (n)])
             
             for i in df.index:
-                df.at[n-1, i] = df.at[i, i]
+                df.at[n-1, i] = np.mean([df.at[j, i] for j in range(i+1)])
             
             df = df.drop(range(16))
             
@@ -775,15 +775,15 @@ def create_viz(list_dataframe, title, legend, xlabel, ylabel, filename, list_exp
             std = calculate(list_dataframe[i], "std")
             
             plt.plot(x_indices, avg, color_const[legend[i]][0], label=legend[i])
-            plt.fill_between(x_indices, [(avg[i]-std[i]) for i in range (len(avg))], [(avg[i]+std[i]) for i in range (len(avg))], color= color_const[legend[i]][1], alpha=0.2)
+            plt.fill_between(x_indices, [(avg[i]-std[i]) for i in range (len(avg))], [(avg[i]+std[i]) for i in range (len(avg))], color= color_const[legend[i]][1], alpha=0.05)
     
     plt.title(title.replace('_.txt', ''))
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
 
-    if 'lss' not in filename:
-        plt.ylim(0, 1)
+    # if 'lss' not in filename:
+    #     plt.ylim(0, 1)
 
     plt.savefig(filename, bbox_inches='tight')
     plt.close()
@@ -812,7 +812,9 @@ def merge_viz(dir_name, list_exp_id, list_backbone, list_baseline, case_name, me
             df[exp_id] = df_mtl.iloc[-1].to_list()
         elif baseline == "one":
             df_one = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range(17)])
+            print(exp_id, df_one)
             df[exp_id] = df_one.iloc[0].values.tolist()
+            print(df_one.iloc[0].values.tolist())
         else:
             df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[exp_id])
         
