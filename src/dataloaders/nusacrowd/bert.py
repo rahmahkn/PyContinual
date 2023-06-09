@@ -77,7 +77,14 @@ def get(logger=None,args=None):
         print('dataset: ',dataset)
         data[t]={}        
         data[t]['name']=dataset
-        data[t]['ncla']=8
+        # data[t]['ncla']=8
+        
+        if 'IMDb_Javanese' == dataset:
+            data[t]['ncla']=2
+        elif ('Emot_Indonesian' == dataset) or ('EmotCMT_Indonesian' == dataset):
+            data[t]['ncla']=5
+        else:
+            data[t]['ncla']=3
 
         processor = data_utils.NusaCrowdProcessor()
         label_list = processor.get_labels()
