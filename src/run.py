@@ -38,6 +38,17 @@ print('\nTask info =',taskcla)
 # Inits
 print('Inits...')
 
+# ----------------------------------------------------------------------
+# Make new directory for the result
+# ----------------------------------------------------------------------
+
+res_dir = f"res/til_classification/nusacrowd/multi/0/{args.exp_id}/"
+
+if not os.path.exists(res_dir):
+    
+    # if the demo_folder directory is not present 
+    # then create it.
+    os.makedirs(res_dir)
 
 # ----------------------------------------------------------------------
 # Apply approach and network.
@@ -286,14 +297,14 @@ for t,ncla in taskcla:
             f1_macro[t,u]=test_f1_macro
 
             # Save
-            print('Save at '+args.output)
-            np.savetxt(args.output + 'progressive.acc.' + str(args.exp_id),acc,'%.4f',delimiter='\t')
-            np.savetxt(args.output + 'progressive.lss.' + str(args.exp_id),lss,'%.4f',delimiter='\t')
-            np.savetxt(args.output + 'progressive.f1_macro.' + str(args.exp_id),f1_macro,'%.4f',delimiter='\t')
+            print('Save at '+res_dir)
+            np.savetxt(res_dir + 'progressive.acc.' + str(args.exp_id),acc,'%.4f',delimiter='\t')
+            np.savetxt(res_dir + 'progressive.lss.' + str(args.exp_id),lss,'%.4f',delimiter='\t')
+            np.savetxt(res_dir + 'progressive.f1_macro.' + str(args.exp_id),f1_macro,'%.4f',delimiter='\t')
             
-            np.savetxt(args.output + 'progressive.avg_acc.' + str(args.exp_id),utils.get_average(acc),'%.4f',delimiter='\t')
-            np.savetxt(args.output + 'progressive.avg_lss.' + str(args.exp_id),utils.get_average(lss),'%.4f',delimiter='\t')
-            np.savetxt(args.output + 'progressive.avg_f1_macro.' + str(args.exp_id),utils.get_average(f1_macro),'%.4f',delimiter='\t')
+            # np.savetxt(res_dir + 'progressive.avg_acc.' + str(args.exp_id),utils.get_average(acc),'%.4f',delimiter='\t')
+            # np.savetxt(res_dir + 'progressive.avg_lss.' + str(args.exp_id),utils.get_average(lss),'%.4f',delimiter='\t')
+            # np.savetxt(res_dir + 'progressive.avg_f1_macro.' + str(args.exp_id),utils.get_average(f1_macro),'%.4f',delimiter='\t')
 
             # Done
             print('*'*100)
@@ -327,9 +338,9 @@ for t,ncla in taskcla:
                         file.writelines(str(acc[j][j]) + '\n')
                         f1_file.writelines(str(f1_macro[j][j]) + '\n')
                         
-    np.savetxt(args.output + 'tasks.' + str(args.exp_id),task_name,delimiter='\t',fmt="%s")
+    np.savetxt(res_dir + 'tasks.' + str(args.exp_id),task_name,delimiter='\t',fmt="%s")
     
-    utils.visualize('', args.exp_id, args.output, "nusacrowd all random", args.task)
+    utils.visualize('', args.exp_id, res_dir, "nusacrowd all random", args.task)
 
 ########################################################################################################################
 
