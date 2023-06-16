@@ -808,13 +808,14 @@ def merge_viz(dir_name, list_exp_id, list_backbone, list_baseline, case_name, me
             output = get_output(backbone, baseline, exp_id)
     
         if baseline == "mtl":
-            df_mtl = pd.read_csv(get_filename(dir_name, exp_id, output, metrics.replace('avg_', '')), sep="\s+")
-            df[exp_id] = df_mtl.iloc[-1].to_list()
+            df_mtl = pd.read_csv(get_filename(dir_name, exp_id, output, metrics.replace('avg_', '')), sep="\s+", names=[i for i in range(17)])
+            # print(get_average(df_mtl))
+            df[exp_id] = get_average(df_mtl)
         elif baseline == "one":
             df_one = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[i for i in range(17)])
-            print(exp_id, df_one)
+            # print(exp_id, df_one)
             df[exp_id] = df_one.iloc[0].values.tolist()
-            print(df_one.iloc[0].values.tolist())
+            # print(df_one.iloc[0].values.tolist())
         else:
             df[exp_id] = pd.read_csv(get_filename(dir_name, exp_id, output, metrics), sep="\s+", names=[exp_id])
         
