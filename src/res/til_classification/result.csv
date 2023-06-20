@@ -1,4 +1,4 @@
-exp_id,backbone,baseline,avg_acc,avg_f1,last_acc,last_f1,bwt,fwt
+exp_id,backbone,baseline,avg_acc,avg_f1,avg_lss,last_acc,last_f1,last_lss,bwt,fwt
 35,bert,mtl,0.7189,0.6551,0.763,0.7189,0.6551,0.763,0.0,0.0
 53,bert_adapter,mtl,0.7013,0.6532,0.7633,0.7013,0.6532,0.7633,0.0,0.0
 79,bert_adapter,mtl,0.6992,0.6519,0.7457,0.6992,0.6519,0.7457,0.0,0.0
