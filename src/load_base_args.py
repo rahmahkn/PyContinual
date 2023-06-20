@@ -102,7 +102,7 @@ def load():
         args.lamb=0.5
 
     if args.baseline == 'a-gem':
-        args.buffer_size=128
+        # args.buffer_size=128
         args.buffer_percent=0.02
         args.gamma=0.5
 
