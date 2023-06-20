@@ -619,7 +619,7 @@ def calculate_metrics(data):
     # change result to dataframe to sort
     result_df = pd.DataFrame(result, columns=['exp_id', 'backbone', 'baseline', 'avg_acc', 'avg_f1_macro', 'avg_lss', 'last_acc', 'last_f1', 'lss', 'bwt', 'fwt'])
     result_df = result_df.astype(dtype= {'avg_acc': 'float64', 'avg_f1_macro': 'float64', 'avg_lss': 'float64', 'last_acc': 'float64', 'last_f1': 'float64', 'lss': 'float64', 'bwt': 'float64', 'fwt': 'float64'})
-    result_df = result_df.sort_values(by='last_f1', ascending=False)
+    result_df = result_df.sort_values(by='exp_id', ascending=True)
     
     result_df_aggr = result_df.groupby(['backbone', 'baseline']).aggregate({'last_acc': 'mean', 'last_f1': 'mean', 'bwt': 'mean', 'fwt': 'mean'})
     result_df_aggr = result_df_aggr.sort_values(by='last_f1', ascending=False)
