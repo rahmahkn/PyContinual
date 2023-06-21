@@ -113,11 +113,11 @@ class Appr(ApprBase):
                 bat.to(self.device) if bat is not None else None for bat in batch]
             input_ids, segment_ids, input_mask, targets,_= batch
             task=torch.autograd.Variable(torch.LongTensor([t]).cuda(),volatile=False)
-            s=(self.smax-1/self.smax)*step/len(data)+1/self.smax
+            # s=(self.smax-1/self.smax)*step/len(data)+1/self.smax
 
             # print('tokens_term_ids: ',tokens_term_ids)
             # Forward
-            output_dict=self.model.forward(task,input_ids, segment_ids, input_mask,s=s)
+            output_dict=self.model.forward(task,input_ids, segment_ids, input_mask)
             masks=output_dict['masks']
 
             if 'dil' in self.args.scenario:
