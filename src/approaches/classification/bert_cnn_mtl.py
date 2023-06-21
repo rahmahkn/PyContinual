@@ -52,32 +52,35 @@ class Appr(object):
     def train(self,t,train,valid,num_train_steps,train_data,valid_data):
         self.model=deepcopy(self.initial_model) # Restart model
 
-        global_step = 0
-        self.model.to(self.device)
+        # global_step = 0
+        # self.model.to(self.device)
 
-        param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
-        param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
-        no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-        optimizer_grouped_parameters = [
-            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-            ]
-        t_total = num_train_steps
-        optimizer = BertAdam(optimizer_grouped_parameters,
-                             lr=self.args.learning_rate,
-                             warmup=self.args.warmup_proportion,
-                             t_total=t_total)
+        # param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
+        # param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
+        # no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+        # optimizer_grouped_parameters = [
+        #     {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+        #     {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+        #     ]
+        # t_total = num_train_steps
+        # optimizer = BertAdam(optimizer_grouped_parameters,
+        #                      lr=self.args.learning_rate,
+        #                      warmup=self.args.warmup_proportion,
+        #                      t_total=t_total)
 
 
         best_loss=np.inf
         best_model=utils.get_model(self.model)
+        lr=self.lr
+        patience=self.lr_patience
+        self.optimizer=self._get_optimizer(lr)
 
         # Loop epochs
         for e in range(int(self.args.num_train_epochs)):
             # Train
             clock0=time.time()
             iter_bar = tqdm(train, desc='Train Iter (loss=X.XXX)')
-            global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
+            self.train_epoch(t,train,iter_bar)
             clock1=time.time()
 
             train_loss=self.eval_validation(t,train)
@@ -91,7 +94,18 @@ class Appr(object):
             if valid_loss<best_loss:
                 best_loss=valid_loss
                 best_model=utils.get_model(self.model)
+                patience=self.lr_patience
                 print(' *',end='')
+            else:
+                patience-=1
+                if patience<=0:
+                    lr/=self.lr_factor
+                    print(' lr={:.1e}'.format(lr),end='')
+                    if lr<self.lr_min:
+                        print()
+                        break
+                    patience=self.lr_patience
+                    self.optimizer=self._get_optimizer(lr)
 
             print()
             # break
@@ -118,15 +132,15 @@ class Appr(object):
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
             loss.backward()
 
-            lr_this_step = self.args.learning_rate * \
-                           self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = lr_this_step
-            optimizer.step()
-            optimizer.zero_grad()
-            global_step += 1
+            # lr_this_step = self.args.learning_rate * \
+            #                self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
+            # for param_group in optimizer.param_groups:
+            #     param_group['lr'] = lr_this_step
+            # optimizer.step()
+            # optimizer.zero_grad()
+            # global_step += 1
 
-        return global_step
+        return 
 
     def eval_validation(self,_,data):
         total_loss=0
