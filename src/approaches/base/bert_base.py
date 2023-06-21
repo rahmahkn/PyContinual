@@ -75,6 +75,14 @@ class Appr(object):
         if args.baseline=='ewc':
             self.lamb=args.lamb                      # Grid search = [500,1000,2000,5000,10000,20000,50000]; best was 5000
             self.fisher=None
+            
+        if  args.baseline=='hat':
+            self.smax = 400  # Grid search = [140,200,300,400]; best was 400
+            self.thres_cosh=50
+            self.thres_emb=6
+            self.lamb=0.75
+            self.mask_pre=None
+            self.mask_back=None
 
         print('BERT NCL')
 
