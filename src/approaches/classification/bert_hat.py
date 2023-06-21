@@ -38,6 +38,7 @@ class Appr(ApprBase):
 
         global_step = 0
         self.model.to(self.device)
+        self.model=deepcopy(self.initial_model) # Restart model: isolate
 
         param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
         param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
@@ -113,7 +114,7 @@ class Appr(ApprBase):
                 bat.to(self.device) if bat is not None else None for bat in batch]
             input_ids, segment_ids, input_mask, targets,_= batch
             task=torch.autograd.Variable(torch.LongTensor([t]).cuda(),volatile=False)
-            s=(self.smax-1/self.smax)*step/len(data)+1/self.smax
+            # s=(self.smax-1/self.smax)*step/len(data)+1/self.smax
 
             # print('tokens_term_ids: ',tokens_term_ids)
             # Forward
