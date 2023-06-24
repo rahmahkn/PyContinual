@@ -29,3 +29,12 @@ exp_id,backbone,baseline,id_random
 72,bert_frozen,one,2
 95,bert_frozen,one,0
 96,bert_frozen,one,1
+132,bert_frozen,ewc,0
+134,bert_frozen,ewc,2
+136,bert,a-gem,0
+137,bert-frozen,a-gem,0
+138,bert-frozen,a-gem,0
+139,bert,a-gem,0
+140,bert,a-gem,0
+141,bert_frozen,a-gem,0
+145,bert_frozen,mtl,0
