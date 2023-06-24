@@ -73,6 +73,7 @@ def get(logger=None,args=None):
     print('tasks: ',len(tasks))
 
     for t in range(args.ntasks):
+        print("t:", t)
         dataset = datasets[tasks.index(random_sep[t])]
         print('dataset: ',dataset)
         data[t]={}        
