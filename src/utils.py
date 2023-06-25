@@ -633,12 +633,12 @@ def calculate_metrics(data):
         for row in result_df.values.tolist():
             csv_writer.writerow(row)
             
-    # with open('res/til_classification/result_per_setting.csv', 'a', newline='') as fp:
-    #     csv_writer = csv.writer(fp, delimiter=',')
+    with open('res/til_classification/result_per_setting.csv', 'a', newline='') as fp:
+        csv_writer = csv.writer(fp, delimiter=',')
         
-    #     list_row = result_df_aggr.values.tolist()
-    #     for i in range (len(list_row)):
-    #         csv_writer.writerow([result_df_aggr.index.get_level_values(0).to_list()[i]] + [result_df_aggr.index.get_level_values(1).to_list()[i]] + ['{:,.4f}'.format(elmt) for elmt in list_row[i]])
+        list_row = result_df_aggr.values.tolist()
+        for i in range (len(list_row)):
+            csv_writer.writerow([result_df_aggr.index.get_level_values(0).to_list()[i]] + [result_df_aggr.index.get_level_values(1).to_list()[i]] + ['{:,.4f}'.format(elmt) for elmt in list_row[i]])
 
 def get_worst_forgetting(dir_name, exp_id, backbone, baseline, list_task): # n: jumlah data worst yang dipakai
     output = get_output(backbone, baseline, exp_id)
@@ -931,15 +931,13 @@ if __name__ == "__main__":
     # list_create_viz = [
     #     # multi_baseline
     #     [['bert'], ['mtl', 'one', 'ncl', 'ewc', 'a-gem'], 'multi_baseline'],
-    #     [['bert_adapter'], ['mtl', 'hat', 'a-gem', 'ewc', 'b-cl', 'ctr'], 'multi_baseline'],
-    #     [['bert_frozen'], ['one', 'a-gem', 'hat', 'kan', 'ncl', 'ewc'], 'multi_baseline'],
+    #     [['bert_frozen'], ['one', 'a-gem', 'hat', 'ncl', 'ewc'], 'multi_baseline'],
         
     #     # multi_backbone
-    #     [['bert_adapter', 'bert_frozen', 'bert'], ['a-gem'], 'multi_backbone'],
-    #     [['bert_adapter', 'bert_frozen', 'bert'], ['ewc'], 'multi_backbone'],
-    #     [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
-    #     [['bert_frozen'], ['kan'], 'multi_backbone'],
-    #     [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
+    #     [['bert_frozen', 'bert'], ['a-gem'], 'multi_backbone'],
+    #     [['bert_frozen', 'bert'], ['ewc'], 'multi_backbone'],
+    #     [['bert_frozen'], ['hat'], 'multi_backbone'],
+    #     [['bert'], ['mtl'], 'multi_backbone'],
     #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
     #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
     # ]
