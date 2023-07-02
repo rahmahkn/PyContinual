@@ -77,6 +77,8 @@ class Appr(ApprBase):
             train_loss,train_acc,train_f1_macro=self.eval(t,train)
             clock2=time.time()
             # print('time: ',float((clock1-clock0)*30*25))
+            array_train_loss.append(train_loss)
+            array_valid_loss.append(valid_loss)
 
             print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, acc={:5.1f}% |'.format(e+1,
                 1000*self.args.train_batch_size*(clock1-clock0)/len(train),1000*self.args.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
