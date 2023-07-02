@@ -913,6 +913,29 @@ def merge_heatmap(list_exp_id, backbone, baseline):
     plt.title(f"heatmap - {backbone}_{baseline}")
     plt.savefig(f"viz/heatmap/{backbone}_{baseline}_f1_macro.png", bbox_inches='tight')
     plt.close()
+    
+def viz_loss(exp_id, backbone, baseline, ntasks, epoch_per_task):
+    arr_train_loss = []
+    arr_valid_loss = []
+    
+    
+    for i in range(ntasks):
+        output = get_output(backbone, baseline, exp_id)
+        
+        with open(f'{output}train_loss_{i}') as fp:
+            arr_train_loss += [float(line.strip()) for line in fp]
+            
+        with open(f'{output}valid_loss_{i}') as fp:
+            arr_valid_loss += [float(line.strip()) for line in fp]
+            
+    # define data values
+    x = [i for i in range(ntasks*epoch_per_task)]
+    
+    plt.plot(x, arr_train_loss)  # Plot the chart
+    plt.show()  # display
+            
+    print(arr_train_loss)
+    print(arr_valid_loss)
 
 ########################################################################################################################
             
@@ -928,22 +951,22 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    list_create_viz = [
-        # multi_baseline
-        [['bert'], ['mtl', 'one', 'ncl', 'ewc', 'a-gem'], 'multi_baseline'],
-        [['bert_frozen'], ['mtl', 'one', 'a-gem', 'hat', 'ncl', 'ewc'], 'multi_baseline'],
+    # list_create_viz = [
+    #     # multi_baseline
+    #     [['bert'], ['mtl', 'one', 'ncl', 'ewc', 'a-gem'], 'multi_baseline'],
+    #     [['bert_frozen'], ['mtl', 'one', 'a-gem', 'hat', 'ncl', 'ewc'], 'multi_baseline'],
         
-        # multi_backbone
-        [['bert', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['ewc'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['hat'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['mtl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
-    ]
+    #     # multi_backbone
+    #     [['bert', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ewc'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['hat'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['mtl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
+    # ]
     
-    for elmt in list_create_viz:
-        run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
+    # for elmt in list_create_viz:
+    #     run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
@@ -995,3 +1018,6 @@ if __name__ == "__main__":
     #             list_exp_id.append(row['exp_id'])
                 
     #     merge_heatmap(list_exp_id, setting[0], setting[1])
+    
+    # test loss visualization
+    viz_loss(156, 'bert', 'a-gem', 4, 20)
