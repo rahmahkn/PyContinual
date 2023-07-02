@@ -26,6 +26,11 @@ import torch.autograd as autograd
 sys.path.append("./approaches/base/")
 from bert_base import Appr as ApprBase
 
+from config import set_args
+
+# Arguments
+args = set_args()
+
 class Appr(ApprBase):
     """ A-GEM adpted from https://github.com/aimagelab/mammoth/blob/master/models/agem.py """
 
@@ -42,6 +47,8 @@ class Appr(ApprBase):
     def train(self,t,train,valid,num_train_steps,train_data,valid_data):
         global_step = 0
         self.model.to(self.device)
+        array_train_loss = []
+        array_valid_loss = []
 
         param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
         param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
@@ -76,14 +83,20 @@ class Appr(ApprBase):
             # Valid
             valid_loss,valid_acc,valid_f1_macro=self.eval(t,valid)
             print(' Valid: loss={:.3f}, acc={:5.1f}% |'.format(valid_loss,100*valid_acc),end='')
+            
+            array_train_loss.append(train_loss)
+            array_valid_loss.append(valid_loss)
+            
             # Adapt lr
             if valid_loss<best_loss:
                 best_loss=valid_loss
                 best_model=utils.get_model(self.model)
-                patience=self.lr_patience
                 print(' *',end='')
 
             print()
+
+        np.savetxt(args.output + 'train_loss_' + str(t),array_train_loss,'%.4f',delimiter='\t')
+        np.savetxt(args.output + 'valid_loss_' + str(t),array_valid_loss,'%.4f',delimiter='\t')
 
         # Restore best
         utils.set_model_(self.model,best_model)
