@@ -42,6 +42,8 @@ class Appr(ApprBase):
     def train(self,t,train,valid,num_train_steps,train_data,valid_data):
         global_step = 0
         self.model.to(self.device)
+        array_train_loss = []
+        array_valid_loss = []
 
         param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
         param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
@@ -70,6 +72,8 @@ class Appr(ApprBase):
             train_loss,train_acc,train_f1_macro=self.eval(t,train)
             clock2=time.time()
             # print('time: ',float((clock1-clock0)*30*25))
+            array_train_loss.append(train_loss)
+            array_valid_loss.append(valid_loss)
 
             print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, acc={:5.1f}% |'.format(e+1,
                 1000*self.args.train_batch_size*(clock1-clock0)/len(train),1000*self.args.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
@@ -80,10 +84,12 @@ class Appr(ApprBase):
             if valid_loss<best_loss:
                 best_loss=valid_loss
                 best_model=utils.get_model(self.model)
-                patience=self.lr_patience
                 print(' *',end='')
 
             print()
+
+        np.savetxt(args.output + 'train_loss',array_train_loss,'%.4f',delimiter='\t')
+        np.savetxt(args.output + 'valid_loss',array_valid_loss,'%.4f',delimiter='\t')
 
         # Restore best
         utils.set_model_(self.model,best_model)
