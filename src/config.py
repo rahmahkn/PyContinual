@@ -199,6 +199,10 @@ def asc_config(parser):
     
     parser.add_argument('--exp_id', type=int,
                         help="ID for experiment")
+    
+    parser.add_argument('--aux_net',action='store_true')
+    parser.add_argument('--aux_model_path', type=str, default='')
+    
     return parser
 
 def train_config(parser):

@@ -931,11 +931,15 @@ def viz_loss(exp_id, backbone, baseline, ntasks, epoch_per_task):
     # define data values
     x = [i for i in range(ntasks*epoch_per_task)]
     
-    plt.plot(x, arr_train_loss)  # Plot the chart
-    plt.show()  # display
-            
-    print(arr_train_loss)
-    print(arr_valid_loss)
+    plt.plot(x, arr_train_loss)
+    plt.title(f"train loss - {exp_id} - {backbone}_{baseline}")
+    plt.savefig(f"viz/loss/{exp_id}_{backbone}_{baseline}_train.png", bbox_inches='tight')
+    plt.close()
+    
+    plt.plot(x, arr_valid_loss)
+    plt.title(f"valid loss - {exp_id} - {backbone}_{baseline}")
+    plt.savefig(f"viz/loss/{exp_id}_{backbone}_{baseline}_valid.png", bbox_inches='tight')
+    plt.close()
 
 ########################################################################################################################
             
@@ -1020,4 +1024,4 @@ if __name__ == "__main__":
     #     merge_heatmap(list_exp_id, setting[0], setting[1])
     
     # test loss visualization
-    viz_loss(156, 'bert', 'a-gem', 4, 20)
+    viz_loss(156, 'bert', 'a-gem', 17, 20)

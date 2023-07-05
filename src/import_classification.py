@@ -267,6 +267,9 @@ if args.task in language_dataset:
         elif args.baseline == 'mtl':
             from approaches.classification import bert_mtl as approach
             from networks.classification import bert_adapter as network
+        elif args.baseline == 'ncl':
+            from approaches.classification import bert_ncl as approach
+            from networks.classification import bert_adapter as network
         elif args.baseline == 'hat':
             from approaches.classification import bert_adapter_mask as approach
             from networks.classification import bert_adapter_mask as network
