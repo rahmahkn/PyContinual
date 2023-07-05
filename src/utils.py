@@ -976,7 +976,7 @@ if __name__ == "__main__":
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
-    # calculate_metrics(list_exp.iterrows())
+    calculate_metrics(list_exp.iterrows())
     
     # get worst forgetting
     # with open('res/til_classification/result_transfer_cl.csv', 'a', newline='') as fp:
