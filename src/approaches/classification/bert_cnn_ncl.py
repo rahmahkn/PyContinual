@@ -75,8 +75,6 @@ class Appr(ApprBase):
             batch = [
                 bat.to(self.device) if bat is not None else None for bat in batch]
             input_ids, segment_ids, input_mask, targets,_= batch
-            # print('tokens_term_ids: ',tokens_term_ids)
-            # Forward
             output_dict=self.model.forward(input_ids, segment_ids, input_mask)
             pooled_rep = output_dict['normalized_pooled_rep']
             if 'dil' in self.args.scenario:
