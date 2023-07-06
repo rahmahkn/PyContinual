@@ -199,7 +199,7 @@ if args.task in language_dataset:
             from approaches.classification import bert_cnn_ewc as approach
             from networks.classification import bert_kim as network
         elif args.baseline=='mtl':
-            from approaches.classification import bert_cnn_mtl as approach
+            from approaches.classification import bert_mtl as approach
             from networks.classification import bert_kim as network
 
 
@@ -224,7 +224,7 @@ if args.task in language_dataset:
             from networks.classification import bert as network
         if args.baseline == 'hat':
             from approaches.classification import bert_hat as approach
-            from networks.classification import bert as network
+            from networks.classification import bert_hat as network
         if args.baseline == 'kan':
             from approaches.classification import bert_kan as approach
             from networks.classification import bert as network
@@ -270,3 +270,6 @@ if args.task in language_dataset:
         elif args.baseline == 'hat':
             from approaches.classification import bert_adapter_mask as approach
             from networks.classification import bert_adapter_mask as network
+        elif args.baseline == 'ncl':
+            from approaches.classification import bert_ncl as approach
+            from networks.classification import bert_adapter as network
