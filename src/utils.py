@@ -585,8 +585,7 @@ def calculate_metrics(data):
         backbone = row['backbone']
         
         output = get_output(backbone, baseline, exp_id)
-        filename = f'res/til_classification/nusacrowd/b_vector/{backbone}_{baseline}_.txtprogressive.b.{exp_id}'
-        
+                
         with open(f'{output}progressive.acc.{exp_id}') as fp:
             mat_acc = [list(map(float, line.strip().split('\t'))) for line in fp]
             
@@ -595,9 +594,6 @@ def calculate_metrics(data):
             
         with open(f'{output}progressive.lss.{exp_id}') as fp:
             mat_lss = [list(map(float, line.strip().split('\t'))) for line in fp]
-            
-        # with open(filename) as fp:
-        #     vec_b = [list(map(float, line.strip().split('\t'))) for line in fp][0]
         
         # calculate result    
         if baseline == 'one':
@@ -611,10 +607,14 @@ def calculate_metrics(data):
                 calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
                 0, 0])
         else:
+            filename = f'res/til_classification/nusacrowd/b_vector/{backbone}_{baseline}_.txtprogressive.b.{exp_id}'
+            with open(filename) as fp:
+                vec_b = [list(map(float, line.strip().split('\t'))) for line in fp][0]
+                
             result.append([exp_id, backbone, baseline,
                 calculate_avg_metrics(get_average(mat_acc)), calculate_avg_metrics(get_average(mat_f1_macro)), calculate_avg_metrics(get_average(mat_lss)),
                 calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
-                calculate_bwt(mat_acc), 0])
+                calculate_bwt(mat_acc), calculate_fwt(mat_acc, vec_b)])
     
     # change result to dataframe to sort
     result_df = pd.DataFrame(result, columns=['exp_id', 'backbone', 'baseline', 'avg_acc', 'avg_f1_macro', 'avg_lss', 'last_acc', 'last_f1', 'lss', 'bwt', 'fwt'])
@@ -955,28 +955,28 @@ if __name__ == "__main__":
     #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    list_create_viz = [
-        # multi_baseline
-        [['bert'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
-        [['bert_frozen'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
+    # list_create_viz = [
+    #     # multi_baseline
+    #     [['bert'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
+    #     [['bert_frozen'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
         
-        # multi_backbone
-        [['bert', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['ewc'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['hat'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['mtl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
-    ]
+    #     # multi_backbone
+    #     [['bert', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ewc'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['hat'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['mtl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
+    # ]
     
-    for elmt in list_create_viz:
-        run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
+    # for elmt in list_create_viz:
+    #     run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
     
     # recalculate all experiments        
-    # calculate_metrics(list_exp.iterrows())
+    calculate_metrics(list_exp.iterrows())
     
     # get worst forgetting
     # with open('res/til_classification/result_transfer_cl.csv', 'a', newline='') as fp:
