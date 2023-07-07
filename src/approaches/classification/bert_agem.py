@@ -93,6 +93,8 @@ class Appr(ApprBase):
             if valid_loss<best_loss:
                 best_loss=valid_loss
                 best_model=utils.get_model(self.model)
+                patience=self.lr_patience
+                
                 print(' *',end='')
 
             print()
@@ -137,6 +139,7 @@ class Appr(ApprBase):
             # now compute the grad on the current data
             optimizer.zero_grad()
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            pooled_rep = output_dict['normalized_pooled_rep']
             if 'dil' in self.args.scenario:
                 output=output_dict['y']
             elif 'til' in self.args.scenario:

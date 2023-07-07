@@ -5,6 +5,9 @@ exp_id,backbone,baseline,id_random
 159,bert,ewc,0
 161,bert,ewc,1
 150,bert,ewc,2
+164,bert,hat,0
+165,bert,hat,1
+166,bert,hat,2
 35,bert,mtl,0
 60,bert,mtl,1
 71,bert,mtl,2
