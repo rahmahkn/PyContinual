@@ -1,0 +1,30 @@
+07/06/2023 09:22:20 - INFO - preparation -   ****************************************************************************************************
+07/06/2023 09:22:20 - INFO - preparation -   Task 11 (./dat/nusacrowd/nusax_senti_ace)
+07/06/2023 09:22:20 - INFO - preparation -   ****************************************************************************************************
+07/06/2023 09:22:20 - INFO - preparation -   Start Training and Set the clock
+train
+Train Iter (loss=  nan):   0%|                                                                                                                                          | 0/16 [00:00<?, ?it/s]/home/jovyan/ta_ap_2023/rahmah/PyContinual/src/pycontinual/lib/python3.8/site-packages/torch/autograd/__init__.py:200: UserWarning: Error detected in MulBackward0. Traceback of forward call that caused the error:
+  File "run.py", line 198, in <module>
+    appr.train(task,train_dataloader,valid_dataloader,num_train_steps,train,valid)
+  File "/home/jovyan/ta_ap_2023/rahmah/PyContinual/src/approaches/classification/bert_hat.py", line 64, in train
+    global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
+  File "/home/jovyan/ta_ap_2023/rahmah/PyContinual/src/approaches/classification/bert_hat.py", line 129, in train_epoch
+    loss,_=self.criterion_hat(output,targets,masks)
+  File "/home/jovyan/ta_ap_2023/rahmah/PyContinual/src/./approaches/base/bert_base.py", line 256, in criterion_hat
+    reg+=(m*aux).sum()
+ (Triggered internally at ../torch/csrc/autograd/python_anomaly_mode.cpp:114.)
+  Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+Train Iter (loss=  nan):   0%|                                                                                                                                          | 0/16 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "run.py", line 198, in <module>
+    appr.train(task,train_dataloader,valid_dataloader,num_train_steps,train,valid)
+  File "/home/jovyan/ta_ap_2023/rahmah/PyContinual/src/approaches/classification/bert_hat.py", line 64, in train
+    global_step=self.train_epoch(t,train,iter_bar, optimizer,t_total,global_step)
+  File "/home/jovyan/ta_ap_2023/rahmah/PyContinual/src/approaches/classification/bert_hat.py", line 134, in train_epoch
+    loss.backward()
+  File "/home/jovyan/ta_ap_2023/rahmah/PyContinual/src/pycontinual/lib/python3.8/site-packages/torch/_tensor.py", line 487, in backward
+    torch.autograd.backward(
+  File "/home/jovyan/ta_ap_2023/rahmah/PyContinual/src/pycontinual/lib/python3.8/site-packages/torch/autograd/__init__.py", line 200, in backward
+    Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: Function 'MulBackward0' returned nan values in its 0th output.
+(pycontinual) root@itb160gb-0:/home/jovyan/ta_ap_2023/rahmah/PyContinual/src# 
