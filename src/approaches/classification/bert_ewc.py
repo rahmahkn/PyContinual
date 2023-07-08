@@ -112,29 +112,37 @@ class Appr(ApprBase):
 
     def train_epoch(self,t,data,iter_bar,optimizer,t_total,global_step):
         self.model.train()
-
         for step, batch in enumerate(iter_bar):
+            # print('step: ',step)
             batch = [
                 bat.to(self.device) if bat is not None else None for bat in batch]
-            input_ids, segment_ids, input_mask, targets,_= batch
+            input_ids, segment_ids, input_mask, targets, _= batch
+            output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            pooled_rep = output_dict['normalized_pooled_rep']
 
-            # Forward current model
-            output_dict=self.model.forward(input_ids, segment_ids, input_mask)
             if 'dil' in self.args.scenario:
                 output=output_dict['y']
             elif 'til' in self.args.scenario:
                 outputs=output_dict['y']
                 output = outputs[t]
             loss=self.criterion_ewc(t,output,targets)
+            if self.args.sup_loss:
+                loss += self.sup_loss(output,pooled_rep,input_ids, segment_ids, input_mask,targets,t)
+
+
+
             iter_bar.set_description('Train Iter (loss=%5.3f)' % loss.item())
-
-            # Backward
-            optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm(self.model.parameters(),self.clipgrad)
-            optimizer.step()
 
-        return
+            lr_this_step = self.args.learning_rate * \
+                           self.warmup_linear(global_step/t_total, self.args.warmup_proportion)
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr_this_step
+            optimizer.step()
+            optimizer.zero_grad()
+            global_step += 1
+
+        return global_step
 
     def eval(self,t,data,test=None,trained_task=None):
         total_loss=0

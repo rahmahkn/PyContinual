@@ -77,8 +77,6 @@ class Appr(ApprBase):
             train_loss,train_acc,train_f1_macro=self.eval(t,train)
             clock2=time.time()
             # print('time: ',float((clock1-clock0)*30*25))
-            array_train_loss.append(train_loss)
-            array_valid_loss.append(valid_loss)
 
             print('| Epoch {:3d}, time={:5.1f}ms/{:5.1f}ms | Train: loss={:.3f}, acc={:5.1f}% |'.format(e+1,
                 1000*self.args.train_batch_size*(clock1-clock0)/len(train),1000*self.args.train_batch_size*(clock2-clock1)/len(train),train_loss,100*train_acc),end='')
@@ -93,6 +91,8 @@ class Appr(ApprBase):
             if valid_loss<best_loss:
                 best_loss=valid_loss
                 best_model=utils.get_model(self.model)
+                patience=self.lr_patience
+                
                 print(' *',end='')
 
             print()
@@ -137,6 +137,7 @@ class Appr(ApprBase):
             # now compute the grad on the current data
             optimizer.zero_grad()
             output_dict = self.model.forward(input_ids, segment_ids, input_mask)
+            pooled_rep = output_dict['normalized_pooled_rep']
             if 'dil' in self.args.scenario:
                 output=output_dict['y']
             elif 'til' in self.args.scenario:

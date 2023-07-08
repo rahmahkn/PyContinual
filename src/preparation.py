@@ -19,7 +19,7 @@ logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message
 logger = logging.getLogger(__name__)
 
 #
-if not args.multi_gpu: torch.autograd.set_detect_anomaly(True)
+# if not args.multi_gpu: torch.autograd.set_detect_anomaly(True)
 
 # ----------------------------------------------------------------------
 # Create needed folder, results name, reult matrix, if any.
