@@ -619,7 +619,7 @@ def calculate_metrics(data):
     # change result to dataframe to sort
     result_df = pd.DataFrame(result, columns=['exp_id', 'backbone', 'baseline', 'avg_acc', 'avg_f1_macro', 'avg_lss', 'last_acc', 'last_f1', 'lss', 'bwt', 'fwt'])
     result_df = result_df.astype(dtype= {'avg_acc': 'float64', 'avg_f1_macro': 'float64', 'avg_lss': 'float64', 'last_acc': 'float64', 'last_f1': 'float64', 'lss': 'float64', 'bwt': 'float64', 'fwt': 'float64'})
-    result_df = result_df.sort_values(by='exp_id', ascending=True)
+    result_df = result_df.sort_values(by='last_f1', ascending=False)
     
     result_df_aggr = result_df.groupby(['backbone', 'baseline']).aggregate({'last_acc': 'mean', 'last_f1': 'mean', 'bwt': 'mean', 'fwt': 'mean'})
     result_df_aggr = result_df_aggr.sort_values(by='last_f1', ascending=False)
@@ -633,12 +633,12 @@ def calculate_metrics(data):
         for row in result_df.values.tolist():
             csv_writer.writerow(row)
             
-    with open('res/til_classification/result_per_setting.csv', 'a', newline='') as fp:
-        csv_writer = csv.writer(fp, delimiter=',')
+    # with open('res/til_classification/result_per_setting.csv', 'a', newline='') as fp:
+    #     csv_writer = csv.writer(fp, delimiter=',')
         
-        list_row = result_df_aggr.values.tolist()
-        for i in range (len(list_row)):
-            csv_writer.writerow([result_df_aggr.index.get_level_values(0).to_list()[i]] + [result_df_aggr.index.get_level_values(1).to_list()[i]] + ['{:,.4f}'.format(elmt) for elmt in list_row[i]])
+    #     list_row = result_df_aggr.values.tolist()
+    #     for i in range (len(list_row)):
+    #         csv_writer.writerow([result_df_aggr.index.get_level_values(0).to_list()[i]] + [result_df_aggr.index.get_level_values(1).to_list()[i]] + ['{:,.4f}'.format(elmt) for elmt in list_row[i]])
 
 def get_worst_forgetting(dir_name, exp_id, backbone, baseline, list_task): # n: jumlah data worst yang dipakai
     output = get_output(backbone, baseline, exp_id)
@@ -913,33 +913,6 @@ def merge_heatmap(list_exp_id, backbone, baseline):
     plt.title(f"heatmap - {backbone}_{baseline}")
     plt.savefig(f"viz/heatmap/{backbone}_{baseline}_f1_macro.png", bbox_inches='tight')
     plt.close()
-    
-def viz_loss(exp_id, backbone, baseline, ntasks, epoch_per_task):
-    arr_train_loss = []
-    arr_valid_loss = []
-    
-    
-    for i in range(ntasks):
-        output = get_output(backbone, baseline, exp_id)
-        
-        with open(f'{output}train_loss_{i}') as fp:
-            arr_train_loss += [float(line.strip()) for line in fp]
-            
-        with open(f'{output}valid_loss_{i}') as fp:
-            arr_valid_loss += [float(line.strip()) for line in fp]
-            
-    # define data values
-    x = [i for i in range(ntasks*epoch_per_task)]
-    
-    plt.plot(x, arr_train_loss)
-    plt.title(f"train loss - {exp_id} - {backbone}_{baseline}")
-    plt.savefig(f"viz/loss/{exp_id}_{backbone}_{baseline}_train.png", bbox_inches='tight')
-    plt.close()
-    
-    plt.plot(x, arr_valid_loss)
-    plt.title(f"valid loss - {exp_id} - {backbone}_{baseline}")
-    plt.savefig(f"viz/loss/{exp_id}_{backbone}_{baseline}_valid.png", bbox_inches='tight')
-    plt.close()
 
 ########################################################################################################################
             
@@ -968,6 +941,21 @@ if __name__ == "__main__":
         [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
         [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
     ]
+    
+    # list_create_viz = [
+    #     # multi_baseline
+    #     [['bert'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
+    #     [['bert_frozen'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
+        
+    #     # multi_backbone
+    #     [['bert_adapter', 'bert_frozen', 'bert'], ['a-gem'], 'multi_backbone'],
+    #     [['bert_adapter', 'bert_frozen', 'bert'], ['ewc'], 'multi_backbone'],
+    #     [['bert_adapter', 'bert_frozen'], ['hat'], 'multi_backbone'],
+    #     [['bert_frozen'], ['kan'], 'multi_backbone'],
+    #     [['bert', 'bert_adapter'], ['mtl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
+    # ]
     
     for elmt in list_create_viz:
         run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
@@ -1020,7 +1008,6 @@ if __name__ == "__main__":
     #     for index, row in list_exp.iterrows():
     #         if (row['baseline'] == setting[1]) and (row['backbone'] == setting[0]):
     #             list_exp_id.append(row['exp_id'])
-                
     #     merge_heatmap(list_exp_id, setting[0], setting[1])
     
     # test loss visualization
