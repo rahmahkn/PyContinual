@@ -239,17 +239,18 @@ for t,ncla in taskcla:
         if hasattr(appr, 'similarities'): torch.save(appr.similarities,args.model_path+'_similarities') # not in state_dict
         if hasattr(appr, 'check_federated'): torch.save(appr.check_federated,args.model_path+'_check_federated') # not in state_dict
 
+        if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.aux_model_path+'_mask_pre') # not in state_dict
+        if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.aux_model_path+'_mask_back')
 
-
-#         if args.aux_net:
-#             torch.save({
-#                         'model_state_dict': appr.aux_model.state_dict(),
-#                         }, args.aux_model_path)
-#             if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.aux_model_path+'_mask_pre') # not in state_dict
-#             if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.aux_model_path+'_mask_back')
-#         else:
-#             if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.model_path+'_mask_pre') # not in state_dict
-#             if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.model_path+'_mask_back')
+        if args.aux_net:
+            torch.save({
+                        'model_state_dict': appr.aux_model.state_dict(),
+                        }, args.aux_model_path)
+            if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.aux_model_path+'_mask_pre') # not in state_dict
+            if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.aux_model_path+'_mask_back')
+        else:
+            if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.model_path+'_mask_pre') # not in state_dict
+            if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.model_path+'_mask_back')
 
     # ----------------------------------------------------------------------
     # Start Testing.
