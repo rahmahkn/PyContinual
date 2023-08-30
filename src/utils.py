@@ -535,7 +535,7 @@ def get_filename(dir_name, exp_id, output, metrics):
   return f"{dir_name}{output}progressive.{metrics}.{exp_id}"
 
 def get_output(backbone, baseline, exp_id):
-    return f"res/til_classification/nusacrowd/{exp_id} - {backbone}_{baseline}_.txt/{backbone}_{baseline}_.txt"
+    return f"res/til_classification/nusacrowd/indobert/{exp_id} - {backbone}_{baseline}_.txt/{backbone}_{baseline}_.txt"
 
 def get_one_result(mat):
     return [mat[i][i] for i in range (len(mat))]
@@ -607,7 +607,7 @@ def calculate_metrics(data):
                 calculate_avg_metrics([mat_acc[-1]]), calculate_avg_metrics([mat_f1_macro[-1]]), calculate_avg_metrics([mat_lss[-1]]),
                 0, 0])
         else:
-            filename = f'res/til_classification/nusacrowd/b_vector/{backbone}_{baseline}_.txtprogressive.b.{exp_id}'
+            filename = f'res/til_classification/nusacrowd/b_vector/{backbone}_{baseline}_.txtprogressive.acc.{exp_id}'
             with open(filename) as fp:
                 vec_b = [list(map(float, line.strip().split('\t'))) for line in fp][0]
                 
@@ -619,21 +619,21 @@ def calculate_metrics(data):
     # change result to dataframe to sort
     result_df = pd.DataFrame(result, columns=['exp_id', 'backbone', 'baseline', 'avg_acc', 'avg_f1_macro', 'avg_lss', 'last_acc', 'last_f1', 'lss', 'bwt', 'fwt'])
     result_df = result_df.astype(dtype= {'avg_acc': 'float64', 'avg_f1_macro': 'float64', 'avg_lss': 'float64', 'last_acc': 'float64', 'last_f1': 'float64', 'lss': 'float64', 'bwt': 'float64', 'fwt': 'float64'})
-    result_df = result_df.sort_values(by='last_f1', ascending=False)
+    result_df = result_df.sort_values(by=['backbone', 'baseline'], ascending=False)
     
     result_df_aggr = result_df.groupby(['backbone', 'baseline']).aggregate({'last_acc': 'mean', 'last_f1': 'mean', 'bwt': 'mean', 'fwt': 'mean'})
-    result_df_aggr = result_df_aggr.sort_values(by='last_f1', ascending=False)
+    result_df_aggr = result_df_aggr.sort_values(by=['backbone', 'baseline'], ascending=False)
     
     print(result_df_aggr)
     
     # write result to csv file    
-    with open('res/til_classification/result.csv', 'a', newline='') as fp:
+    with open('res/til_classification/result_indobert.csv', 'a', newline='') as fp:
         csv_writer = csv.writer(fp, delimiter=',')
         
         for row in result_df.values.tolist():
             csv_writer.writerow(row)
             
-    with open('res/til_classification/result_per_setting.csv', 'a', newline='') as fp:
+    with open('res/til_classification/result_per_setting_indobert.csv', 'a', newline='') as fp:
         csv_writer = csv.writer(fp, delimiter=',')
         
         list_row = result_df_aggr.values.tolist()
@@ -830,7 +830,7 @@ def merge_viz(dir_name, list_exp_id, list_backbone, list_baseline, case_name, me
       create_viz(list_df, f'{backbone} - {case_name}', list_baseline, 'task', metrics, f"viz/{backbone}/{backbone}_{metrics}.png", list_exp_id)
 
 def run_create_viz(list_backbone, list_baseline, title, typ):
-    list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
+    list_exp = pd.read_csv('res/til_classification/list_experiments_indobert.csv',delimiter=',')
     
     list_exp_id = []
     
@@ -917,7 +917,7 @@ def merge_heatmap(list_exp_id, backbone, baseline):
 ########################################################################################################################
             
 if __name__ == "__main__":
-    list_exp = pd.read_csv('res/til_classification/list_experiments.csv',delimiter=',')
+    list_exp = pd.read_csv('res/til_classification/list_experiments_indobert.csv',delimiter=',')
     
     with open('nusacrowd_all_random', 'r') as f:
         list_task = [[task.strip() for task in line.split(' ')] for line in f]
@@ -925,25 +925,25 @@ if __name__ == "__main__":
     # visualize an experiment
     # for index, row in list_exp.iterrows():
     #     if (row['baseline'] == 'hat') and (row['backbone'] == 'bert_adapter'):
-    #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
+    #         visualize('', row['exp_id'], f"res/til_classification/nusacrowd/indobert/{row['exp_id']} - {row['backbone']}_{row['baseline']}_.txt/{row['backbone']}_{row['baseline']}_.txt", 'nusacrowd_all_random', 'nusacrowd')
     
     # create viz for backbone and baseline combination
-    list_create_viz = [
-        # multi_baseline
-        [['bert'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
-        [['bert_frozen'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
+    # list_create_viz = [
+    #     # multi_baseline
+    #     [['bert'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
+    #     [['bert_frozen'], ['mtl', 'one', 'ncl', 'a-gem', 'ewc', 'hat'], 'multi_baseline'],
         
-        # multi_backbone
-        [['bert', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['ewc'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['hat'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['mtl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
-        [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
-    ]
+    #     # multi_backbone
+    #     [['bert', 'bert_frozen'], ['a-gem'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ewc'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['hat'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['mtl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['ncl'], 'multi_backbone'],
+    #     [['bert', 'bert_frozen'], ['one'], 'multi_backbone']
+    # ]
     
-    for elmt in list_create_viz:
-        run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
+    # for elmt in list_create_viz:
+    #     run_create_viz(elmt[0], elmt[1], 'nusacrowd all random', elmt[2])
     
     # recalculate an experiment
     # calculate_metrics(81, 'bert_adapter', 'a-gem')
@@ -966,10 +966,10 @@ if __name__ == "__main__":
     
     # # create heatmap
     # create_heatmap(111, 'bert_adapter', 'b-cl', 'transfer.f1_macro')
-    for index, row in list_exp.iterrows():
-        if (row['baseline'] != 'mtl') or (row['baseline'] != 'one'):
-            create_heatmap(row['exp_id'], row['backbone'], row['baseline'], 'acc')
-            create_heatmap(row['exp_id'], row['backbone'], row['baseline'], 'f1_macro')
+    # for index, row in list_exp.iterrows():
+    #     if (row['baseline'] != 'mtl') or (row['baseline'] != 'one'):
+    #         create_heatmap(row['exp_id'], row['backbone'], row['baseline'], 'acc')
+    #         create_heatmap(row['exp_id'], row['backbone'], row['baseline'], 'f1_macro')
     
     # create merge heatmap
     # list_setting = [
