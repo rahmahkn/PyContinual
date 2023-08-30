@@ -97,8 +97,8 @@ class Appr(ApprBase):
 
             print()
 
-        np.savetxt(args.output + 'train_loss_' + str(t),array_train_loss,'%.4f',delimiter='\t')
-        np.savetxt(args.output + 'valid_loss_' + str(t),array_valid_loss,'%.4f',delimiter='\t')
+        # np.savetxt(args.output + 'train_loss_' + str(t),array_train_loss,'%.4f',delimiter='\t')
+        # np.savetxt(args.output + 'valid_loss_' + str(t),array_valid_loss,'%.4f',delimiter='\t')
 
         # Restore best
         utils.set_model_(self.model,best_model)
@@ -113,6 +113,7 @@ class Appr(ApprBase):
         loader = DataLoader(train_data, batch_size=samples_per_task)
 
         input_ids, segment_ids, input_mask, targets,_ = next(iter(loader))
+        print(input_ids, segment_ids, input_mask, targets)
 
         self.buffer.add_data(
             examples=input_ids.to(self.device),
