@@ -42,7 +42,7 @@ print('Inits...')
 # Make new directory for the result
 # ----------------------------------------------------------------------
 
-res_dir = f"res/til_classification/nusacrowd/multi/0/{args.exp_id}/"
+res_dir = args.output
 
 if not os.path.exists(res_dir):
     
