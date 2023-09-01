@@ -106,7 +106,6 @@ class Appr(ApprBase):
             # Watch out! We do not want to keep t models (or fisher diagonals) in memory, therefore we have to merge fisher diagonals
             for n,_ in self.model.named_parameters():
                 self.fisher[n]=(self.fisher[n]+fisher_old[n]*t)/(t+1)       # Checked: it is better than the other option
-                #self.fisher[n]=0.5*(self.fisher[n]+fisher_old[n])
 
         return
 

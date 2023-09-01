@@ -38,7 +38,6 @@ class Appr(ApprBase):
 
         global_step = 0
         self.model.to(self.device)
-        # self.model=deepcopy(self.initial_model) # Restart model: isolate
 
         param_optimizer = [(k, v) for k, v in self.model.named_parameters() if v.requires_grad==True]
         param_optimizer = [n for n in param_optimizer if 'pooler' not in n[0]]
