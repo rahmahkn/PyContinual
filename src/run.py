@@ -121,135 +121,131 @@ if args.print_report:
 
 for t,ncla in taskcla:
 
-#     if args.eval_each_step:
-#         args.resume_from_aux_file = base_resume_from_aux_file + 'steps'+str(t)
-#         args.resume_from_file = base_resume_from_file + 'steps'+str(t)
-#         resume_checkpoint(appr)
+    if args.eval_each_step:
+        args.resume_from_aux_file = base_resume_from_aux_file + 'steps'+str(t)
+        args.resume_from_file = base_resume_from_file + 'steps'+str(t)
+        resume_checkpoint(appr)
+    
+    logger.info('*'*100)
+    logger.info('Task {:2d} ({:s})'.format(t,data[t]['name']))
+    logger.info('*'*100)
 
-#     # print('*'*100)
-#     # print('Task {:2d} ({:s})'.format(t,data[t]['name']))
-#     # print('*'*100)
-#     #
-#     logger.info('*'*100)
-#     logger.info('Task {:2d} ({:s})'.format(t,data[t]['name']))
-#     logger.info('*'*100)
+    # if t>1: exit()
 
-#     # if t>1: exit()
+    if 'mtl' in args.baseline:
+        # Get data. We do not put it to GPU
+        if t==0:
+            train=data[t]['train']
+            valid=data[t]['valid']
+            num_train_steps=data[t]['num_train_steps']
 
-#     if 'mtl' in args.baseline:
-#         # Get data. We do not put it to GPU
-#         if t==0:
-#             train=data[t]['train']
-#             valid=data[t]['valid']
-#             num_train_steps=data[t]['num_train_steps']
+        else:
+            train = ConcatDataset([train,data[t]['train']])
+            valid = ConcatDataset([valid,data[t]['valid']])
+            num_train_steps+=data[t]['num_train_steps']
+        task=t
 
-#         else:
-#             train = ConcatDataset([train,data[t]['train']])
-#             valid = ConcatDataset([valid,data[t]['valid']])
-#             num_train_steps+=data[t]['num_train_steps']
-#         task=t
+        if t < len(taskcla)-1: continue #only want the last one
 
-#         if t < len(taskcla)-1: continue #only want the last one
-
-#     else:
-#         # Get data
-#         train=data[t]['train']
-#         valid=data[t]['valid']
-#         num_train_steps=data[t]['num_train_steps']
-#         task=t
+    else:
+        # Get data
+        train=data[t]['train']
+        valid=data[t]['valid']
+        num_train_steps=data[t]['num_train_steps']
+        task=t
 
 
-#     if  args.task == 'asc': #special setting
-#         if 'XuSemEval' in data[t]['name']:
-#             args.num_train_epochs=args.xusemeval_num_train_epochs #10
-#         else:
-#             args.num_train_epochs=args.bingdomains_num_train_epochs #30
-#             num_train_steps*=args.bingdomains_num_train_epochs_multiplier # every task got refresh, *3
+    if  args.task == 'asc': #special setting
+        if 'XuSemEval' in data[t]['name']:
+            args.num_train_epochs=args.xusemeval_num_train_epochs #10
+        else:
+            args.num_train_epochs=args.bingdomains_num_train_epochs #30
+            num_train_steps*=args.bingdomains_num_train_epochs_multiplier # every task got refresh, *3
 
-#     if args.multi_gpu and args.distributed:
-#         valid_sampler = SubsetRandomSampler(valid) #TODO: DitributedSequentailSampler
-#         valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size)
-#     else:
-#         valid_sampler = SequentialSampler(valid)
-#         valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
+    if args.multi_gpu and args.distributed:
+        valid_sampler = SubsetRandomSampler(valid) #TODO: DitributedSequentailSampler
+        valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size)
+    else:
+        valid_sampler = SequentialSampler(valid)
+        valid_dataloader = DataLoader(valid, sampler=valid_sampler, batch_size=args.eval_batch_size, pin_memory=True)
 
-#     if args.resume_model and t < args.resume_from_task: continue #resume. dont forget to copy the forward results
+    if args.resume_model and t < args.resume_from_task: continue #resume. dont forget to copy the forward results
 
 
-#     if args.multi_gpu and args.distributed:
-#         train_sampler = SubsetRandomSampler(train)
-#         train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
-#     else:
-#         train_sampler = RandomSampler(train)
-#         train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size,pin_memory=True)
+    if args.multi_gpu and args.distributed:
+        train_sampler = SubsetRandomSampler(train)
+        train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size)
+    else:
+        train_sampler = RandomSampler(train)
+        train_dataloader = DataLoader(train, sampler=train_sampler, batch_size=args.train_batch_size,pin_memory=True)
 
-#     logger.info('Start Training and Set the clock')
+    logger.info('Start Training and Set the clock')
     tstart=time.time()
 
 
-#     if not args.eval_only:
-#         if args.task in extraction_tasks:
-#             label_list = data[t]['label_list']
-#             appr.train(task,train_dataloader,valid_dataloader,num_train_steps,train,valid,label_list)
-#         else:
-#             # Train
-#             print('train')
-#             appr.train(task,train_dataloader,valid_dataloader,num_train_steps,train,valid)
+    if not args.eval_only:
+        if args.task in extraction_tasks:
+            label_list = data[t]['label_list']
+            appr.train(task,train_dataloader,valid_dataloader,num_train_steps,train,valid,label_list)
+        else:
+            # Train
+            print('train')
+            appr.train(task,train_dataloader,valid_dataloader,num_train_steps,train,valid)
 
-#     print('-'*100)
+    print('-'*100)
 
-#     if args.exit_after_first_task: #sometimes we want to fast debug or estimate the excution time
-#         #TODO: consider save to file and print them out
-#         logger.info('[Elapsed time per epochs = {:.1f} s]'.format((time.time()-tstart)))
-#         logger.info('[Elapsed time per epochs = {:.1f} min]'.format((time.time()-tstart)/(60)))
-#         logger.info('[Elapsed time per epochs = {:.1f} h]'.format((time.time()-tstart)/(60*60)))
-#         if 'kim' not in args.baseline and 'mlp' not in args.baseline and 'cnn' not in args.baseline:
-#             if 'asc' in args.task: pre_define_num_epochs = 30 #non-semeval estimation
-#             elif 'dsc' in args.task: pre_define_num_epochs = 20
-#             elif 'newsgroup' in args.task: pre_define_num_epochs = 10
-#             elif 'nusacrowd' in args.task: pre_define_num_epochs = 10
-#             logger.info('[Elapsed time per tasks = {:.1f} s]'.format((time.time()-tstart)*pre_define_num_epochs))
-#             logger.info('[Elapsed time per tasks = {:.1f} min]'.format(((time.time()-tstart)/(60))*pre_define_num_epochs))
-#             logger.info('[Elapsed time per tasks = {:.1f} h]'.format(((time.time()-tstart)/(60*60))*pre_define_num_epochs))
-#         else:
-#             if 'asc' in args.task: additional = 3 #different size for asc tasks
-#             else: additional = 1
-#             logger.info('[Elapsed time per tasks = {:.1f} s]'.format((time.time()-tstart)*50*additional)) # estimation for early stopping
-#             logger.info('[Elapsed time per tasks = {:.1f} min]'.format(((time.time()-tstart)/(60))*50*additional))
-#             logger.info('[Elapsed time per tasks = {:.1f} h]'.format(((time.time()-tstart)/(60*60))*50*additional))
-#         exit()
+    if args.exit_after_first_task: #sometimes we want to fast debug or estimate the excution time
+        #TODO: consider save to file and print them out
+        logger.info('[Elapsed time per epochs = {:.1f} s]'.format((time.time()-tstart)))
+        logger.info('[Elapsed time per epochs = {:.1f} min]'.format((time.time()-tstart)/(60)))
+        logger.info('[Elapsed time per epochs = {:.1f} h]'.format((time.time()-tstart)/(60*60)))
+        if 'kim' not in args.baseline and 'mlp' not in args.baseline and 'cnn' not in args.baseline:
+            if 'asc' in args.task: pre_define_num_epochs = 30 #non-semeval estimation
+            elif 'dsc' in args.task: pre_define_num_epochs = 20
+            elif 'newsgroup' in args.task: pre_define_num_epochs = 10
+            elif 'nusacrowd' in args.task: pre_define_num_epochs = 10
+            logger.info('[Elapsed time per tasks = {:.1f} s]'.format((time.time()-tstart)*pre_define_num_epochs))
+            logger.info('[Elapsed time per tasks = {:.1f} min]'.format(((time.time()-tstart)/(60))*pre_define_num_epochs))
+            logger.info('[Elapsed time per tasks = {:.1f} h]'.format(((time.time()-tstart)/(60*60))*pre_define_num_epochs))
+        else:
+            if 'asc' in args.task: additional = 3 #different size for asc tasks
+            else: additional = 1
+            logger.info('[Elapsed time per tasks = {:.1f} s]'.format((time.time()-tstart)*50*additional)) # estimation for early stopping
+            logger.info('[Elapsed time per tasks = {:.1f} min]'.format(((time.time()-tstart)/(60))*50*additional))
+            logger.info('[Elapsed time per tasks = {:.1f} h]'.format(((time.time()-tstart)/(60*60))*50*additional))
+        exit()
 
-#     if args.save_each_step:
-#         args.model_path = base_model_path + 'steps'+str(t)
-#         args.aux_model_path = base_aux_model_path + 'steps'+str(t)
+    if args.save_each_step:
+        args.model_path = base_model_path + 'steps'+str(t)
+        args.aux_model_path = base_aux_model_path + 'steps'+str(t)
 
-#     if args.save_model:
-#         print('save model ')
+    if args.save_model:
+        print('save model ')
 
-#         torch.save({
-#                     'model_state_dict': appr.model.state_dict(),
-#                     }, args.model_path)
-#         #for GEM
-#         if hasattr(appr, 'buffer'): torch.save(appr.buffer,args.model_path+'_buffer') # not in state_dict
-#         if hasattr(appr, 'grad_dims'): torch.save(appr.grad_dims,args.model_path+'_grad_dims') # not in state_dict
-#         if hasattr(appr, 'grads_cs'): torch.save(appr.grads_cs,args.model_path+'_grads_cs') # not in state_dict
-#         if hasattr(appr, 'grads_da'): torch.save(appr.grads_da,args.model_path+'_grads_da') # not in state_dict
-#         if hasattr(appr, 'history_mask_pre'): torch.save(appr.history_mask_pre,args.model_path+'_history_mask_pre') # not in state_dict
-#         if hasattr(appr, 'similarities'): torch.save(appr.similarities,args.model_path+'_similarities') # not in state_dict
-#         if hasattr(appr, 'check_federated'): torch.save(appr.check_federated,args.model_path+'_check_federated') # not in state_dict
+        torch.save({
+                    'model_state_dict': appr.model.state_dict(),
+                    }, args.model_path)
+        #for GEM
+        if hasattr(appr, 'buffer'): torch.save(appr.buffer,args.model_path+'_buffer') # not in state_dict
+        if hasattr(appr, 'grad_dims'): torch.save(appr.grad_dims,args.model_path+'_grad_dims') # not in state_dict
+        if hasattr(appr, 'grads_cs'): torch.save(appr.grads_cs,args.model_path+'_grads_cs') # not in state_dict
+        if hasattr(appr, 'grads_da'): torch.save(appr.grads_da,args.model_path+'_grads_da') # not in state_dict
+        if hasattr(appr, 'history_mask_pre'): torch.save(appr.history_mask_pre,args.model_path+'_history_mask_pre') # not in state_dict
+        if hasattr(appr, 'similarities'): torch.save(appr.similarities,args.model_path+'_similarities') # not in state_dict
+        if hasattr(appr, 'check_federated'): torch.save(appr.check_federated,args.model_path+'_check_federated') # not in state_dict
 
-#         if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.aux_model_path+'_mask_pre') # not in state_dict
-#         if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.aux_model_path+'_mask_back')
+        if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.aux_model_path+'_mask_pre') # not in state_dict
+        if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.aux_model_path+'_mask_back')
 
-#         if args.aux_net:
-#             torch.save({
-#                         'model_state_dict': appr.aux_model.state_dict(),
-#                         }, args.aux_model_path)
-#             if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.aux_model_path+'_mask_pre') # not in state_dict
-#             if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.aux_model_path+'_mask_back')
-#         else:
-#             if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.model_path+'_mask_pre') # not in state_dict
-#             if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.model_path+'_mask_back')
+        if args.aux_net:
+            torch.save({
+                        'model_state_dict': appr.aux_model.state_dict(),
+                        }, args.aux_model_path)
+            if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.aux_model_path+'_mask_pre') # not in state_dict
+            if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.aux_model_path+'_mask_back')
+        else:
+            if hasattr(appr, 'mask_pre'): torch.save(appr.mask_pre,args.model_path+'_mask_pre') # not in state_dict
+            if hasattr(appr, 'mask_back'): torch.save(appr.mask_back,args.model_path+'_mask_back')
 
     # ----------------------------------------------------------------------
     # Start Testing.
@@ -299,12 +295,12 @@ for t,ncla in taskcla:
             # Save
             print('Save at '+res_dir)
             np.savetxt(res_dir + 'progressive.b.' + str(args.exp_id),acc,'%.4f',delimiter='\t')
-#             np.savetxt(res_dir + 'progressive.lss.' + str(args.exp_id),lss,'%.4f',delimiter='\t')
-#             np.savetxt(res_dir + 'progressive.f1_macro.' + str(args.exp_id),f1_macro,'%.4f',delimiter='\t')
+            np.savetxt(res_dir + 'progressive.lss.' + str(args.exp_id),lss,'%.4f',delimiter='\t')
+            np.savetxt(res_dir + 'progressive.f1_macro.' + str(args.exp_id),f1_macro,'%.4f',delimiter='\t')
             
-            # np.savetxt(res_dir + 'progressive.avg_acc.' + str(args.exp_id),utils.get_average(acc),'%.4f',delimiter='\t')
-            # np.savetxt(res_dir + 'progressive.avg_lss.' + str(args.exp_id),utils.get_average(lss),'%.4f',delimiter='\t')
-            # np.savetxt(res_dir + 'progressive.avg_f1_macro.' + str(args.exp_id),utils.get_average(f1_macro),'%.4f',delimiter='\t')
+            np.savetxt(res_dir + 'progressive.avg_acc.' + str(args.exp_id),utils.get_average(acc),'%.4f',delimiter='\t')
+            np.savetxt(res_dir + 'progressive.avg_lss.' + str(args.exp_id),utils.get_average(lss),'%.4f',delimiter='\t')
+            np.savetxt(res_dir + 'progressive.avg_f1_macro.' + str(args.exp_id),utils.get_average(f1_macro),'%.4f',delimiter='\t')
 
             # Done
             print('*'*100)
@@ -320,27 +316,27 @@ for t,ncla in taskcla:
             print('[Elapsed time = {:.1f} h]'.format((time.time()-tstart)/(60*60)))
 
 
-#             with open(performance_output,'w') as file, open(f1_macro_output,'w') as f1_file:
+            with open(performance_output,'w') as file, open(f1_macro_output,'w') as f1_file:
 
-#                 if args.baseline=='one':
-#                     for j in range(acc.shape[1]):
-#                         file.writelines(str(acc[j][j]) + '\n')
-#                         f1_file.writelines(str(f1_macro[j][j]) + '\n')
-#                 else:
-#                     for j in range(acc.shape[1]):
-#                         file.writelines(str(acc[-1][j]) + '\n')
-#                         f1_file.writelines(str(f1_macro[-1][j]) + '\n')
+                if args.baseline=='one':
+                    for j in range(acc.shape[1]):
+                        file.writelines(str(acc[j][j]) + '\n')
+                        f1_file.writelines(str(f1_macro[j][j]) + '\n')
+                else:
+                    for j in range(acc.shape[1]):
+                        file.writelines(str(acc[-1][j]) + '\n')
+                        f1_file.writelines(str(f1_macro[-1][j]) + '\n')
 
 
-#             with open(performance_output_forward,'w') as file, open(f1_macro_output_forward,'w') as f1_file:
-#                 if not args.baseline=='one':
-#                     for j in range(acc.shape[1]):
-#                         file.writelines(str(acc[j][j]) + '\n')
-#                         f1_file.writelines(str(f1_macro[j][j]) + '\n')
+            with open(performance_output_forward,'w') as file, open(f1_macro_output_forward,'w') as f1_file:
+                if not args.baseline=='one':
+                    for j in range(acc.shape[1]):
+                        file.writelines(str(acc[j][j]) + '\n')
+                        f1_file.writelines(str(f1_macro[j][j]) + '\n')
                         
-#     np.savetxt(res_dir + 'tasks.' + str(args.exp_id),task_name,delimiter='\t',fmt="%s")
+    np.savetxt(res_dir + 'tasks.' + str(args.exp_id),task_name,delimiter='\t',fmt="%s")
     
-#     utils.visualize('', args.exp_id, res_dir, "nusacrowd all random", args.task)
+    utils.visualize('', args.exp_id, res_dir, "nusacrowd all random", args.task)
 
 ########################################################################################################################
 
